@@ -1,0 +1,48 @@
+daily_target_prs: 10
+default_max_issue_scan: 30
+workspace_root: .work
+repos:
+  - name: pytorch/pytorch
+    labels_any: ["module: bug", "enhancement", "good first issue"]
+    branch_prefix: "ai-fix"
+    commit_template: "fix: resolve #{issue_number} {title}"
+    pr_title_template:
+      bug: "[Bugfix] {title}"
+      feature: "[Feature] {title}"
+    checks:
+      - "python -m pip install -r requirements.txt"
+      - "python -m pytest test --maxfail=1"
+    fix_command: "python -m oss_issue_fixer.plugins.stub_fixer --issue {issue_number} --repo {repo} --type {issue_type} --title \"{title}\""
+  - name: vllm-project/vllm
+    labels_any: ["bug", "feature", "good first issue"]
+    branch_prefix: "ai-fix"
+    commit_template: "fix: resolve #{issue_number} {title}"
+    pr_title_template:
+      bug: "[Bugfix] {title}"
+      feature: "[Feature] {title}"
+    checks:
+      - "python -m pip install -r requirements/test.txt"
+      - "python -m pytest tests -q --maxfail=1"
+    fix_command: "python -m oss_issue_fixer.plugins.stub_fixer --issue {issue_number} --repo {repo} --type {issue_type} --title \"{title}\""
+  - name: sgl-project/sglang
+    labels_any: ["bug", "enhancement", "good first issue"]
+    branch_prefix: "ai-fix"
+    commit_template: "fix: resolve #{issue_number} {title}"
+    pr_title_template:
+      bug: "[Bugfix] {title}"
+      feature: "[Feature] {title}"
+    checks:
+      - "python -m pip install -r requirements.txt"
+      - "python -m pytest test -q --maxfail=1"
+    fix_command: "python -m oss_issue_fixer.plugins.stub_fixer --issue {issue_number} --repo {repo} --type {issue_type} --title \"{title}\""
+  - name: triton-lang/triton
+    labels_any: ["bug", "feature", "good first issue"]
+    branch_prefix: "ai-fix"
+    commit_template: "fix: resolve #{issue_number} {title}"
+    pr_title_template:
+      bug: "[Bugfix] {title}"
+      feature: "[Feature] {title}"
+    checks:
+      - "python -m pip install -r python/requirements.txt"
+      - "python -m pytest python/test/unit -q --maxfail=1"
+    fix_command: "python -m oss_issue_fixer.plugins.stub_fixer --issue {issue_number} --repo {repo} --type {issue_type} --title \"{title}\""
