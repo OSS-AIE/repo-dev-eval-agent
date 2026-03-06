@@ -1,0 +1,6 @@
+{
+  "repo": "pytorch/pytorch",
+  "local_path": "D:\\vbox\\repos\\oss-issue-fixer-agent\\.work\\pytorch__pytorch",
+  "status": "missing",
+  "hint": "Repo mirror not found. Let the agent clone it, then rerun this script."
+}

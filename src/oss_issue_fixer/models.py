@@ -13,12 +13,14 @@ class RepoPolicy:
     pr_title_template: Dict[str, str]
     checks: List[str]
     fix_command: str
+    fix_timeout_sec: int
 
 
 @dataclass
 class AppConfig:
     daily_target_prs: int
     default_max_issue_scan: int
+    attempt_cooldown_hours: int
     workspace_root: str
     repos: List[RepoPolicy]
 

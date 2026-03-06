@@ -1,58 +1,118 @@
-# OSS Issue Fixer Agent
+﻿# OSS Issue Fixer Agent
 
-一个面向 `pytorch/vllm/sglang/triton` 等开源社区的自动修复与提 PR agent。
+Automate issue triage, patch generation, checks, and PR submission for major OSS ML repos.
 
-## 能力
+## Target Repositories
 
-- 社区仓库可配置（`config/repos.yaml`）。
-- 自动抓取 issue/feature，按仓库规则生成分支、commit、PR 标题。
-- 严格质量门禁：仅在本地校验命令全部通过后才提交 PR。
-- 支持每日 PR 配额（默认 `10`）。
-- 支持从仓库 `CONTRIBUTING.md` 拉取规范作为提示上下文。
+- `pytorch/pytorch`
+- `vllm-project/vllm`
+- `sgl-project/sglang`
+- `triton-lang/triton`
 
-## 快速开始
+Configured in [config/repos.yaml](config/repos.yaml).
 
-```bash
+## What Is Implemented
+
+- Scan open issues by labels.
+- Fork/clone target repos and create issue branches.
+- Build issue context with CONTRIBUTING excerpt.
+- Run `codex exec` non-interactively to generate code fixes.
+- Run quality gates before commit/PR.
+- Push branch and create PR automatically.
+- Persist issue states in `.work/.agent-state.json`:
+- already submitted issues will not be retried
+- failed issues are retried only after cooldown
+
+## Quick Start
+
+```powershell
 cd D:\vbox\repos\oss-issue-fixer-agent
 python -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\activate
 pip install -e .
 ```
 
-配置环境变量（建议用系统环境变量，不要写入代码）：
+Set environment variables (system/user scope recommended):
 
-- `GITHUB_TOKEN`
-- `OPENAI_API_KEY`（可选，用于 LLM patch 生成）
-- `OPENAI_BASE_URL`（可选）
-- `OPENAI_MODEL`（可选）
+- `GITHUB_TOKEN` (required)
+- `OPENAI_MODEL` (optional)
+- `CODEX_FIXER_TIMEOUT_SEC` (optional, default `1800`)
 
-运行一次：
+Codex CLI requirement:
 
-```bash
-oss-fixer run-once --config config/repos.yaml --max-prs 10
+```powershell
+codex.cmd login
+codex.cmd exec --help
 ```
 
-每日调度：
+## Run Once
 
-```bash
-oss-fixer run-daily --config config/repos.yaml
+```powershell
+python -m oss_issue_fixer.cli run-once --config config/repos.yaml --max-prs 2
 ```
 
-## 设计说明
+Run for a single repository:
 
-1. 每个仓库单独定义：
-   - issue 标签筛选
-   - PR 标题模板（如 `[Bugfix] {title}`）
-   - commit 模板
-   - 质量门禁命令（lint/test/build）
-   - fix 命令（可接入你自己的自动修复器）
-2. Agent 只在 `git diff` 非空且质量门禁全通过时 commit/push/PR。
-3. 自动 fork 目标仓库，PR 从你的 fork 提交到 upstream。
+```powershell
+python -m oss_issue_fixer.cli run-once --config config/repos.yaml --repo vllm-project/vllm --max-prs 1 --dry-run
+```
 
-## 重要提示
+Write machine-readable result:
 
-- “每天至少 10 个 PR”可以通过配额调度实现，但是否真正成功取决于：
-  - issue 可修复性
-  - CI 资源与测试时长
-  - 社区审核规则
-- 建议先 `--dry-run` 跑 1~2 天观察稳定性，再切正式模式。
+```powershell
+python -m oss_issue_fixer.cli run-once --config config/repos.yaml --result-json reports/run-once.json
+```
+
+## Local Smoke Test (No GitHub/OpenAI Network)
+
+When network is blocked, validate local pipeline with fallback stub:
+
+```powershell
+$env:ALLOW_STUB_FALLBACK='1'
+python -m oss_issue_fixer.cli run-local-smoke --config config/repos.yaml --repo vllm-project/vllm --skip-checks
+```
+
+This command validates:
+- context generation
+- fixer plugin invocation
+- git change detection
+- branch workflow
+
+## Daily Automation (Local Windows)
+
+Register scheduled task:
+
+```powershell
+.\tools\register_daily_task.ps1 -TaskName OSSIssueFixerDaily -Time 09:00
+```
+
+Manual run:
+
+```powershell
+.\tools\run_agent_daily.ps1 -MaxPrs 2
+```
+
+Logs are written to `logs/daily-run-*.log`.
+
+Detailed plan: [specs/daily-automation-plan.md](specs/daily-automation-plan.md).
+
+## Skills and Specs
+
+- Skill package: [skills/oss-ml-issue-fixing/SKILL.md](skills/oss-ml-issue-fixing/SKILL.md)
+- Repo references:
+- [skills/oss-ml-issue-fixing/references/pytorch.md](skills/oss-ml-issue-fixing/references/pytorch.md)
+- [skills/oss-ml-issue-fixing/references/vllm.md](skills/oss-ml-issue-fixing/references/vllm.md)
+- [skills/oss-ml-issue-fixing/references/sglang.md](skills/oss-ml-issue-fixing/references/sglang.md)
+- [skills/oss-ml-issue-fixing/references/triton.md](skills/oss-ml-issue-fixing/references/triton.md)
+- Auto-generated local repo specs: `specs/repos/*.md` via:
+
+```powershell
+$env:PYTHONPATH='src'
+python tools/generate_repo_specs.py --config config/repos.yaml --out-dir specs/repos
+```
+
+## Notes
+
+- This environment may not have outbound network access; first-run clone/fork needs GitHub connectivity.
+- Start with low `--max-prs` and tune checks in `config/repos.yaml` to match your compute budget.
+- If Codex/OpenAI is unavailable, set `ALLOW_STUB_FALLBACK=1` for local smoke validation only.

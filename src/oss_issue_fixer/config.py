@@ -18,12 +18,14 @@ def load_config(path: str) -> AppConfig:
             pr_title_template=item["pr_title_template"],
             checks=item.get("checks", []),
             fix_command=item["fix_command"],
+            fix_timeout_sec=int(item.get("fix_timeout_sec", 1800)),
         )
         for item in raw["repos"]
     ]
     return AppConfig(
         daily_target_prs=int(raw.get("daily_target_prs", 10)),
         default_max_issue_scan=int(raw.get("default_max_issue_scan", 30)),
+        attempt_cooldown_hours=int(raw.get("attempt_cooldown_hours", 24)),
         workspace_root=raw.get("workspace_root", ".work"),
         repos=repos,
     )

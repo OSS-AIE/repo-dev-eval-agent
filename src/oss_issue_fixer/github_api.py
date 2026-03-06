@@ -25,19 +25,32 @@ class GitHubClient:
         )
 
     def _get(self, path: str, params: Dict | None = None):
-        resp = self.session.get(f"{self.base}{path}", params=params, timeout=60)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = self.session.get(f"{self.base}{path}", params=params, timeout=60)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
+            raise RuntimeError(f"GitHub GET failed: {path}: {exc}") from exc
 
     def _post(self, path: str, payload: Dict | None = None):
-        resp = self.session.post(f"{self.base}{path}", json=payload or {}, timeout=60)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = self.session.post(
+                f"{self.base}{path}", json=payload or {}, timeout=60
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
+            raise RuntimeError(f"GitHub POST failed: {path}: {exc}") from exc
 
     def _patch(self, path: str, payload: Dict | None = None):
-        resp = self.session.patch(f"{self.base}{path}", json=payload or {}, timeout=60)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = self.session.patch(
+                f"{self.base}{path}", json=payload or {}, timeout=60
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
+            raise RuntimeError(f"GitHub PATCH failed: {path}: {exc}") from exc
 
     def current_user(self) -> Dict:
         return self._get("/user")
@@ -45,12 +58,10 @@ class GitHubClient:
     def list_open_issues(
         self, repo: str, labels_any: List[str], per_page: int = 30
     ) -> List[Issue]:
-        labels = ",".join(labels_any)
         payload = self._get(
             f"/repos/{repo}/issues",
             params={
                 "state": "open",
-                "labels": labels,
                 "sort": "updated",
                 "direction": "desc",
                 "per_page": per_page,
@@ -68,7 +79,15 @@ class GitHubClient:
                     is_pull_request="pull_request" in item,
                 )
             )
-        return issues
+        if not labels_any:
+            return issues
+        wanted = {x.lower() for x in labels_any}
+        filtered: List[Issue] = []
+        for issue in issues:
+            labels = {x.lower() for x in issue.labels}
+            if labels.intersection(wanted):
+                filtered.append(issue)
+        return filtered
 
     def get_file_text(self, repo: str, path: str) -> str:
         # NOTE: contents API returns base64 for JSON, but raw endpoint is simpler.
@@ -84,6 +103,13 @@ class GitHubClient:
     def ensure_fork(self, upstream_repo: str) -> Dict:
         try:
             return self._post(f"/repos/{upstream_repo}/forks")
+        except RuntimeError as exc:
+            cause = exc.__cause__
+            if isinstance(cause, requests.HTTPError) and cause.response is not None and cause.response.status_code == 422:
+                me = self.current_user()["login"]
+                repo_name = upstream_repo.split("/", 1)[1]
+                return self._get(f"/repos/{me}/{repo_name}")
+            raise
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 422:
                 me = self.current_user()["login"]
