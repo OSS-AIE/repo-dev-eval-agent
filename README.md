@@ -1,118 +1,134 @@
-﻿# OSS Issue Fixer Agent
+# Repo Dev Eval Agent
 
-Automate issue triage, patch generation, checks, and PR submission for major OSS ML repos.
-
-## Target Repositories
-
-- `pytorch/pytorch`
-- `vllm-project/vllm`
-- `sgl-project/sglang`
-- `triton-lang/triton`
-
-Configured in [config/repos.yaml](config/repos.yaml).
+Evaluate open-source repositories for developer experience, local build/test
+readiness, Markdown quality, and PR pipeline efficiency.
 
 ## What Is Implemented
 
-- Scan open issues by labels.
-- Fork/clone target repos and create issue branches.
-- Build issue context with CONTRIBUTING excerpt.
-- Run `codex exec` non-interactively to generate code fixes.
-- Run quality gates before commit/PR.
-- Push branch and create PR automatically.
-- Persist issue states in `.work/.agent-state.json`:
-- already submitted issues will not be retried
-- failed issues are retried only after cooldown
+- Full-repository Markdown scanning, not only `README.md`
+- Local build / unit-test / code-check command inference and execution
+- Docker / devcontainer / workflow container readiness detection
+- GitHub Actions PR duration and runner resource estimation
+- GitCode / GitHub AI review signal detection
+- Configurable AI CLI adapter support for `codex`, `opencode`, and custom tools
+- One-shot CLI report generation for repository lists
+
+The original OSS issue-fixing automation is still present in this codebase and
+can be used separately.
 
 ## Quick Start
 
 ```powershell
-cd D:\vbox\repos\oss-issue-fixer-agent
+cd D:\vbox\repos\repo_dev_eval_agent
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -e .
 ```
 
-Set environment variables (system/user scope recommended):
+## Repo Evaluation Agent
 
-- `GITHUB_TOKEN` (required)
+Architecture:
+
+- [specs/repo-eval-agent-architecture.md](specs/repo-eval-agent-architecture.md)
+
+Sample config:
+
+- [config/repo_eval.sample.yaml](config/repo_eval.sample.yaml)
+
+Config-driven evaluation:
+
+```powershell
+$env:PYTHONPATH='src'
+python -m oss_issue_fixer.cli evaluate-repos `
+  --config config/repo_eval.sample.yaml `
+  --repo vllm-project/vllm `
+  --no-ai `
+  --report-md reports/eval/sample.md `
+  --report-json reports/eval/sample.json
+```
+
+One-shot evaluation without writing a config file:
+
+```powershell
+$env:PYTHONPATH='src'
+python -m oss_issue_fixer.cli assess-repos `
+  --repo https://github.com/vllm-project/vllm `
+  --repo https://gitcode.com/Ascend/MindIE-SD `
+  --pr-window-days 30 `
+  --local-runner wsl `
+  --wsl-distro Ubuntu `
+  --enable-local-commands `
+  --report-root reports/eval
+```
+
+This one-shot command will:
+
+- resolve repo URLs / local paths automatically
+- scan all Markdown files instead of only `README.md`
+- infer local build / unit-test / code-check commands
+- optionally run commands through WSL for Linux-oriented repos
+- compute GitHub PR workflow average duration within a configurable time window
+- detect AI code-review signals from GitHub reviews/comments or GitCode PR comments
+- generate Markdown and JSON reports in one run
+
+Optional AI summary adapter:
+
+- the adapter is configurable and not hard-coded to Codex
+- current built-in default templates:
+  - `codex` / `openai-codex`
+  - `opencode`
+- tools such as `claudecode`, `trae`, or other CLIs can be used by passing:
+  - `--enable-ai`
+  - `--ai-provider <name>`
+  - `--ai-command <path>`
+  - `--ai-command-template '<template>'`
+
+Example using Codex first for debugging:
+
+```powershell
+$env:PYTHONPATH='src'
+python -m oss_issue_fixer.cli assess-repos `
+  --repo https://github.com/vllm-project/vllm `
+  --enable-ai `
+  --ai-provider codex `
+  --ai-command codex.cmd `
+  --report-root reports/eval
+```
+
+If you want the agent to execute local build/test commands, either:
+
+- set `enable_local_commands: true` in config, or
+- pass `--enable-local-commands`
+
+Remote platform credentials:
+
+- `GITHUB_TOKEN`: enables GitHub Actions / PR review metric collection
+- `GITCODE_TOKEN`: enables GitCode PR comment inspection, including robot review detection such as `ascend-robot`
+
+Set environment variables:
+
+- `GITHUB_TOKEN`
+- `GITCODE_TOKEN`
 - `OPENAI_MODEL` (optional)
 - `CODEX_FIXER_TIMEOUT_SEC` (optional, default `1800`)
 
-Codex CLI requirement:
+## Issue Fixer Automation
 
-```powershell
-codex.cmd login
-codex.cmd exec --help
-```
-
-## Run Once
+The original issue-fixing flow is still available:
 
 ```powershell
 python -m oss_issue_fixer.cli run-once --config config/repos.yaml --max-prs 2
 ```
 
-Run for a single repository:
-
-```powershell
-python -m oss_issue_fixer.cli run-once --config config/repos.yaml --repo vllm-project/vllm --max-prs 1 --dry-run
-```
-
-Write machine-readable result:
-
-```powershell
-python -m oss_issue_fixer.cli run-once --config config/repos.yaml --result-json reports/run-once.json
-```
-
-## Local Smoke Test (No GitHub/OpenAI Network)
-
-When network is blocked, validate local pipeline with fallback stub:
+Local smoke test:
 
 ```powershell
 $env:ALLOW_STUB_FALLBACK='1'
 python -m oss_issue_fixer.cli run-local-smoke --config config/repos.yaml --repo vllm-project/vllm --skip-checks
 ```
 
-This command validates:
-- context generation
-- fixer plugin invocation
-- git change detection
-- branch workflow
-
-## Daily Automation (Local Windows)
-
-Register scheduled task:
-
-```powershell
-.\tools\register_daily_task.ps1 -TaskName OSSIssueFixerDaily -Time 09:00
-```
-
-Manual run:
-
-```powershell
-.\tools\run_agent_daily.ps1 -MaxPrs 2
-```
-
-Logs are written to `logs/daily-run-*.log`.
-
-Detailed plan: [specs/daily-automation-plan.md](specs/daily-automation-plan.md).
-
-## Skills and Specs
-
-- Skill package: [skills/oss-ml-issue-fixing/SKILL.md](skills/oss-ml-issue-fixing/SKILL.md)
-- Repo references:
-- [skills/oss-ml-issue-fixing/references/pytorch.md](skills/oss-ml-issue-fixing/references/pytorch.md)
-- [skills/oss-ml-issue-fixing/references/vllm.md](skills/oss-ml-issue-fixing/references/vllm.md)
-- [skills/oss-ml-issue-fixing/references/sglang.md](skills/oss-ml-issue-fixing/references/sglang.md)
-- [skills/oss-ml-issue-fixing/references/triton.md](skills/oss-ml-issue-fixing/references/triton.md)
-- Auto-generated local repo specs: `specs/repos/*.md` via:
-
-```powershell
-$env:PYTHONPATH='src'
-python tools/generate_repo_specs.py --config config/repos.yaml --out-dir specs/repos
-```
-
 ## Notes
 
-- This environment may not have outbound network access; first-run clone/fork needs GitHub connectivity.
-- Start with low `--max-prs` and tune checks in `config/repos.yaml` to match your compute budget.
-- If Codex/OpenAI is unavailable, set `ALLOW_STUB_FALLBACK=1` for local smoke validation only.
+- GitHub PR metrics are more stable with an authenticated `GITHUB_TOKEN`
+- GitCode PR bot-comment collection requires `GITCODE_TOKEN`
+- Linux-first repositories usually work better with `--local-runner wsl`

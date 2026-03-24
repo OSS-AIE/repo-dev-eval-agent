@@ -2,6 +2,10 @@
 __pycache__/
 .pytest_cache/
 .work/
+.work_gitcode_pr_215.html
+.work_github_pr_37969.html
+config/repo_eval.real.yaml
+reports/
 *.pyc
 *.pyo
 *.pyd

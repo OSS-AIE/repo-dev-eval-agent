@@ -1,0 +1,30 @@
+workspace_root: .work/eval
+report_root: reports/eval
+recent_pr_limit: 10
+recent_review_pr_limit: 10
+default_timeout_sec: 1800
+enable_command_inference: true
+enable_local_commands: false
+repos:
+  - name: vllm-project/vllm
+    local_path: D:\vbox\repos\vllm_upstream
+    local:
+      runner: wsl
+      wsl_distro: Ubuntu
+      build_command: ""
+      incremental_build_command: ""
+      unit_test_command: "pytest tests/v1/structured_output/test_backend_xgrammar.py -q"
+      timeout_sec: 1800
+    github:
+      workflow_events:
+        - pull_request
+        - pull_request_target
+      pr_window_days: 30
+      github_token_env: GITHUB_TOKEN
+      ai_review_author_markers:
+        - coderabbitai
+        - copilot
+    ai:
+      enabled: true
+      provider: codex
+      command: codex.cmd
