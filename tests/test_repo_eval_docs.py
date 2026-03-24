@@ -33,7 +33,10 @@ def test_analyze_documentation_quality_flags_missing_code_check_docs():
                 ],
             ),
         ),
-        incremental_build=CommandExecutionResult(status="ok", command="python setup.py bdist_wheel"),
+        incremental_build=CommandExecutionResult(
+            status="ok",
+            command="python setup.py bdist_wheel",
+        ),
         unit_test=CommandExecutionResult(status="ok", command="pytest -q"),
         code_check=CommandExecutionResult(status="not_configured"),
         pr_metrics=PullRequestMetrics(),
@@ -65,7 +68,10 @@ def test_analyze_documentation_quality_classifies_dependency_and_script_failures
         incremental_build=CommandExecutionResult(
             status="failed",
             command="python setup.py bdist_wheel",
-            stderr_excerpt="Because torch==2.1.0 has no wheels with a matching Python ABI tag (e.g., cp312)",
+            stderr_excerpt=(
+                "Because torch==2.1.0 has no wheels with a matching Python ABI tag "
+                "(e.g., cp312)"
+            ),
         ),
         unit_test=CommandExecutionResult(
             status="failed",

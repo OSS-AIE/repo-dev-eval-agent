@@ -74,39 +74,72 @@ def _classify_command_failure(
             + "; ".join(f"{item.source_file}: {item.command}" for item in documented[:3])
         )
 
-    if any(token in text for token in ("ssl:", "couldn't connect", "connection timed out", "unexpected eof")):
+    if any(
+        token in text
+        for token in ("ssl:", "couldn't connect", "connection timed out", "unexpected eof")
+    ):
         _append_issue(
             issues,
             category="environment_network_blocker",
             root_cause="environment",
             severity="medium",
-            summary=f"{area} 阶段受到网络或镜像源波动影响",
+            summary=f"{area} 阶段受到网络、镜像源或外部站点波动影响",
             evidence=evidence,
-            recommendation="在文档中补充代理/镜像源/重试建议，并在 CI 中缓存依赖与 hook 环境。",
+            recommendation=(
+                "在文档中补充代理、镜像源和重试建议，并在 CI 中缓存依赖、"
+                "测试数据或 pre-commit hook 环境。"
+            ),
         )
         return
 
-    if any(token in text for token in ("libcuda.so", "failed to infer device type", "nvidia-smi", "cuda")):
+    if any(
+        token in text
+        for token in (
+            "libcuda.so",
+            "failed to infer device type",
+            "nvidia-smi",
+            "cuda",
+            "/dev/davinci",
+            "npu",
+            "ascend",
+        )
+    ):
         _append_issue(
             issues,
             category="missing_environment_prerequisite",
             root_cause="environment",
             severity="high",
-            summary=f"{area} 依赖 GPU/CUDA 运行时，但当前环境不满足",
+            summary=f"{area} 依赖 GPU/NPU 运行环境，但当前机器不满足前置条件",
             evidence=evidence,
-            recommendation="在文档开头显式写明 GPU、CUDA 驱动和容器 runtime 前置条件，并给出 CPU 或 mock 路径（如果支持）。",
+            recommendation=(
+                "在文档开头显式写明 GPU/NPU、驱动、容器 runtime、设备映射和"
+                "内核版本前置条件，并在可能时补一个 CPU/mock 路径。"
+            ),
         )
         return
 
-    if any(token in text for token in ("cp312", "cp311", "requires-python", "abi tag", "unsatisfiable", "no matching distribution")):
+    if any(
+        token in text
+        for token in (
+            "cp312",
+            "cp311",
+            "requires-python",
+            "abi tag",
+            "unsatisfiable",
+            "no matching distribution",
+        )
+    ):
         _append_issue(
             issues,
             category="missing_version_prerequisite",
             root_cause="documentation",
             severity="high",
-            summary=f"{area} 文档缺少明确的 Python/依赖版本前置条件",
+            summary=f"{area} 文档缺少明确的 Python / 依赖版本前置条件",
             evidence=evidence,
-            recommendation="把支持的 Python 版本、关键依赖版本和不兼容组合写进安装/构建章节，并在命令示例旁直接标注。",
+            recommendation=(
+                "把支持的 Python 版本、关键依赖版本和不兼容组合写入安装/构建章节，"
+                "并在命令示例旁直接标注。"
+            ),
         )
         return
 
@@ -116,9 +149,11 @@ def _classify_command_failure(
             category="missing_dependency_step",
             root_cause="documentation",
             severity="high",
-            summary=f"{area} 示例命令缺少必要依赖准备步骤",
+            summary=f"{area} 示例命令缺少必要的依赖准备步骤",
             evidence=evidence,
-            recommendation="补全测试/检测前的依赖安装步骤，并确保文档里的示例命令能在新环境直接跑通。",
+            recommendation=(
+                "补全构建、测试、代码检测前的依赖安装步骤，确保文档里的命令能在新环境直接跑通。"
+            ),
         )
         return
 
@@ -128,9 +163,12 @@ def _classify_command_failure(
             category="repository_script_issue",
             root_cause="repository",
             severity="high",
-            summary=f"{area} 失败根因是仓库脚本内容或行尾格式问题，不是 Markdown 描述问题",
+            summary=f"{area} 失败根因在仓库脚本内容或 CRLF/LF 行尾格式，不是 Markdown 描述不清",
             evidence=evidence,
-            recommendation="修复脚本行尾为 LF，并通过 `.gitattributes` 固化 shell 脚本的文本格式。",
+            recommendation=(
+                "修复脚本为 LF 行尾，并用 `.gitattributes` 固化 shell 脚本换行格式；"
+                "再加一条 CI 烟测保障。"
+            ),
         )
         return
 
@@ -140,9 +178,11 @@ def _classify_command_failure(
             category="missing_tooling_prerequisite",
             root_cause="documentation",
             severity="medium",
-            summary=f"{area} 文档给了命令，但缺少工具安装前置说明",
+            summary=f"{area} 文档给出了命令，但缺少工具安装前置说明",
             evidence=evidence,
-            recommendation="在命令前补充依赖工具安装步骤，例如 `pre-commit`、`uv`、`docker`、`pytest` 等。",
+            recommendation=(
+                "在命令前补充依赖工具安装步骤，例如 `pre-commit`、`uv`、`docker`、`pytest` 等。"
+            ),
         )
         return
 
@@ -151,9 +191,11 @@ def _classify_command_failure(
         category="execution_failure_needs_manual_triage",
         root_cause="mixed",
         severity="medium",
-        summary=f"{area} 命令执行失败，需要进一步区分是文档漂移还是仓库行为变化",
+        summary=f"{area} 命令执行失败，需要继续区分是文档漂移还是仓库行为变化",
         evidence=evidence,
-        recommendation="复核文档示例、依赖锁定和仓库脚本是否一致，并为该命令补一个 CI 烟测。",
+        recommendation=(
+            "复核文档示例、依赖锁定和仓库脚本是否一致，并为该命令补一条 CI 烟测。"
+        ),
     )
 
 
@@ -161,7 +203,6 @@ def analyze_documentation_quality(
     result: RepoEvaluationResult,
 ) -> list[DocumentationIssue]:
     issues: list[DocumentationIssue] = []
-    docs = result.static.documentation
     build_docs = _doc_commands(result, "build")
     test_docs = _doc_commands(result, "test")
     check_docs = _doc_commands(result, "check")
@@ -173,9 +214,11 @@ def analyze_documentation_quality(
             category="missing_build_command_docs",
             root_cause="documentation",
             severity="medium",
-            summary="仓库具备构建路径，但 Markdown 未给出可直接执行的构建命令",
+            summary="仓库具备构建路径，但 Markdown 没有给出可直接执行的构建命令",
             evidence=[f"inferred build command: {result.static.inferred_build_command}"],
-            recommendation="在开发者文档中补充最小可运行的本地构建命令，并注明工作目录与前置依赖。",
+            recommendation=(
+                "在开发者文档中补充最小可运行的本地构建命令，并注明工作目录与前置依赖。"
+            ),
         )
 
     if result.static.inferred_unit_test_command and not test_docs:
@@ -184,9 +227,11 @@ def analyze_documentation_quality(
             category="missing_test_command_docs",
             root_cause="documentation",
             severity="medium",
-            summary="仓库具备测试路径，但 Markdown 未给出可直接执行的测试命令",
+            summary="仓库具备测试路径，但 Markdown 没有给出可直接执行的测试命令",
             evidence=[f"inferred test command: {result.static.inferred_unit_test_command}"],
-            recommendation="在贡献或开发文档中补充最小 UT 命令，以及首次执行前需要安装的依赖集合。",
+            recommendation=(
+                "在贡献或开发文档中补充最小 UT 命令，并写明首次执行前需要安装的依赖集合。"
+            ),
         )
 
     if result.static.code_check_supported and not check_docs:
@@ -195,9 +240,11 @@ def analyze_documentation_quality(
             category="missing_code_check_docs",
             root_cause="documentation",
             severity="medium",
-            summary="仓库支持代码检测，但 Markdown 未给出 lint / pre-commit 执行说明",
+            summary="仓库支持代码检测，但 Markdown 没有给出 lint / pre-commit 执行说明",
             evidence=result.static.check_tools[:4],
-            recommendation="补充代码检测章节，至少说明 lint 命令、自动修复命令和常见失败排查路径。",
+            recommendation=(
+                "补充代码检测章节，至少说明 lint 命令、自动修复命令和常见失败排查路径。"
+            ),
         )
 
     container = result.static.container_environment
@@ -209,18 +256,26 @@ def analyze_documentation_quality(
             severity="high",
             summary="Markdown 提到了容器路径，但仓库内没有可直接复现的容器定义",
             evidence=container.reference_files[:4] + container.setup_blockers[:2],
-            recommendation="补充可直接执行的 `docker pull`/`docker load`/`docker build` 命令，或在仓库内提供 Dockerfile/compose/devcontainer。",
+            recommendation=(
+                "补充可直接执行的 `docker pull`、`docker load` 或 `docker build` 命令，"
+                "或者在仓库内提供 Dockerfile / compose / devcontainer。"
+            ),
         )
 
-    if any("login" in cmd.command.lower() or "download" in cmd.command.lower() for cmd in container_docs):
+    if any(
+        "login" in cmd.command.lower() or "download" in cmd.command.lower()
+        for cmd in container_docs
+    ):
         _append_issue(
             issues,
             category="external_manual_dependency",
             root_cause="documentation",
             severity="medium",
-            summary="容器准备依赖外部站点登录或手工下载，难以自动化复现",
+            summary="容器准备依赖外部站点登录或手动下载，难以自动化复现",
             evidence=[f"{item.source_file}: {item.command}" for item in container_docs[:3]],
-            recommendation="增加公开可访问的镜像拉取方式，或明确说明下载入口、鉴权方式和离线导入步骤。",
+            recommendation=(
+                "增加公开可访问的镜像拉取方式，或明确写清下载入口、鉴权方式和离线导入步骤。"
+            ),
         )
 
     _classify_command_failure(issues, "构建", result.incremental_build, build_docs)

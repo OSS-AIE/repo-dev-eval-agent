@@ -3,7 +3,9 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from oss_issue_fixer.cli import _policy_from_repo_input
+from openpyxl import Workbook
+
+from oss_issue_fixer.cli import _load_repo_inputs, _policy_from_repo_input
 from oss_issue_fixer.repo_eval_models import AIEvalConfig, RemoteEvalConfig
 
 
@@ -65,3 +67,45 @@ def test_policy_from_repo_input_supports_local_path_with_ssh_remote(tmp_path: Pa
 
     assert policy.name == "vllm-project/vllm"
     assert policy.clone_url == "git@github.com:vllm-project/vllm.git"
+
+
+def test_load_repo_inputs_merges_cli_and_xlsx_inputs(tmp_path: Path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "repos"
+    sheet.append(["组织名", "项目名", "仓库名", "仓库链接"])
+    sheet.append(["Ascend", "MindIE", "MindIE-SD", "https://gitcode.com/Ascend/MindIE-SD.git"])
+    sheet.append(["vLLM", "vLLM", "vllm", "https://github.com/vllm-project/vllm.git"])
+    xlsx_path = tmp_path / "repos.xlsx"
+    workbook.save(xlsx_path)
+
+    values = _load_repo_inputs(
+        ["https://github.com/vllm-project/vllm.git"],
+        repo_xlsx=str(xlsx_path),
+        repo_sheet="repos",
+    )
+
+    assert values == [
+        "https://github.com/vllm-project/vllm.git",
+        "https://gitcode.com/Ascend/MindIE-SD.git",
+    ]
+
+
+def test_load_repo_inputs_supports_offset_and_limit(tmp_path: Path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["仓库链接"])
+    sheet.append(["https://gitcode.com/Ascend/MindIE-SD.git"])
+    sheet.append(["https://github.com/vllm-project/vllm.git"])
+    sheet.append(["https://github.com/sgl-project/sglang.git"])
+    xlsx_path = tmp_path / "repos.xlsx"
+    workbook.save(xlsx_path)
+
+    values = _load_repo_inputs(
+        [],
+        repo_xlsx=str(xlsx_path),
+        repo_limit=1,
+        repo_offset=1,
+    )
+
+    assert values == ["https://github.com/vllm-project/vllm.git"]

@@ -153,6 +153,8 @@ DOC_TEST_HINTS = (
     "unittest",
     "bash run_test.sh",
     "bash run_UT_test.sh",
+    "run_test.sh",
+    "run_UT_test.sh",
     "python tests/",
 )
 
@@ -310,6 +312,67 @@ def _classify_documentation_command(command: str) -> list[str]:
     return categories
 
 
+def _scan_markdown_text(
+    *,
+    source_name: str,
+    text: str,
+    assessment: DocumentationAssessment,
+    commands_seen: set[tuple[str, str, str]],
+) -> None:
+    relevant = False
+
+    if _text_has_any(text, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
+        relevant = True
+
+    for match in FENCED_CODE_RE.finditer(text):
+        lang = (match.group("lang") or "").strip().lower()
+        body = match.group("body") or ""
+        if lang and not any(
+            hint in lang
+            for hint in ("bash", "shell", "console", "sh", "zsh", "pwsh", "powershell")
+        ):
+            if not _text_has_any(body, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
+                continue
+        elif not _text_has_any(body, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
+            continue
+
+        relevant = True
+        for command in _split_markdown_command_block(body):
+            categories = _classify_documentation_command(command)
+            for category in categories:
+                key = (source_name, category, command)
+                if key in commands_seen:
+                    continue
+                commands_seen.add(key)
+                assessment.commands.append(
+                    DocumentationCommand(
+                        source_file=source_name,
+                        category=category,
+                        command=command,
+                    )
+                )
+
+    if relevant:
+        _append_unique(assessment.relevant_files, source_name)
+
+
+def _git_command(
+    root: Path,
+    args: list[str],
+) -> tuple[int, str, str]:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=str(root),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+        timeout=60,
+    )
+    return proc.returncode, proc.stdout or "", proc.stderr or ""
+
+
 def _scan_markdown_docs(root: Path) -> DocumentationAssessment:
     assessment = DocumentationAssessment()
     commands_seen: set[tuple[str, str, str]] = set()
@@ -317,46 +380,72 @@ def _scan_markdown_docs(root: Path) -> DocumentationAssessment:
     for path in _markdown_files(root):
         assessment.markdown_files_scanned += 1
         rel = _relative_to_root(root, path)
-        text = _safe_read_text(path)
-        relevant = False
-
-        if _text_has_any(text, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
-            relevant = True
-
-        for match in FENCED_CODE_RE.finditer(text):
-            lang = (match.group("lang") or "").strip().lower()
-            body = match.group("body") or ""
-            if lang and not any(
-                hint in lang
-                for hint in ("bash", "shell", "console", "sh", "zsh", "pwsh", "powershell")
-            ):
-                if not _text_has_any(body, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
-                    continue
-            elif not _text_has_any(body, DOC_COMMAND_HINTS + DOC_CONTAINER_HINTS):
-                continue
-
-            relevant = True
-            for command in _split_markdown_command_block(body):
-                categories = _classify_documentation_command(command)
-                for category in categories:
-                    key = (rel, category, command)
-                    if key in commands_seen:
-                        continue
-                    commands_seen.add(key)
-                    assessment.commands.append(
-                        DocumentationCommand(
-                            source_file=rel,
-                            category=category,
-                            command=command,
-                        )
-                    )
-
-        if relevant:
-            _append_unique(assessment.relevant_files, rel)
+        _scan_markdown_text(
+            source_name=rel,
+            text=_safe_read_text(path),
+            assessment=assessment,
+            commands_seen=commands_seen,
+        )
 
     if assessment.markdown_files_scanned and not assessment.relevant_files:
-        assessment.notes.append("markdown scanned, but no install/build/test/check instructions were extracted")
+        assessment.notes.append(
+            "markdown scanned, but no install/build/test/check instructions were extracted"
+        )
     return assessment
+
+
+def _scan_markdown_docs_from_git_ref(root: Path, ref: str) -> DocumentationAssessment:
+    assessment = DocumentationAssessment()
+    commands_seen: set[tuple[str, str, str]] = set()
+    rc, stdout, stderr = _git_command(root, ["ls-tree", "-r", "--name-only", ref])
+    if rc != 0:
+        assessment.notes.append(f"failed to scan markdown from ref {ref}: {_short_text(stderr)}")
+        return assessment
+
+    for raw in stdout.splitlines():
+        rel = raw.strip()
+        lowered = rel.lower()
+        if not lowered.endswith(".md") and not lowered.endswith(".mdx"):
+            continue
+        rc_show, file_text, show_stderr = _git_command(root, ["show", f"{ref}:{rel}"])
+        assessment.markdown_files_scanned += 1
+        if rc_show != 0:
+            assessment.notes.append(
+                f"failed to read markdown from ref {ref}:{rel}: {_short_text(show_stderr)}"
+            )
+            continue
+        _scan_markdown_text(
+            source_name=f"{ref}:{rel}",
+            text=file_text,
+            assessment=assessment,
+            commands_seen=commands_seen,
+        )
+
+    if assessment.markdown_files_scanned and not assessment.relevant_files:
+        assessment.notes.append(
+            f"markdown ref scanned ({ref}), but no install/build/test/check instructions were extracted"
+        )
+    return assessment
+
+
+def _merge_documentation_assessments(
+    *items: DocumentationAssessment,
+) -> DocumentationAssessment:
+    merged = DocumentationAssessment()
+    seen_commands: set[tuple[str, str, str]] = set()
+    for item in items:
+        merged.markdown_files_scanned += item.markdown_files_scanned
+        for path in item.relevant_files:
+            _append_unique(merged.relevant_files, path)
+        for command in item.commands:
+            key = (command.source_file, command.category, command.command)
+            if key in seen_commands:
+                continue
+            seen_commands.add(key)
+            merged.commands.append(command)
+        for note in item.notes:
+            _append_unique(merged.notes, note)
+    return merged
 
 
 def _documented_commands(
@@ -1094,7 +1183,10 @@ def _detect_from_workflows(root: Path, result: StaticAnalysisResult) -> None:
                 )
 
 
-def scan_repository(root: Path) -> StaticAnalysisResult:
+def scan_repository(
+    root: Path,
+    documentation_refs: list[str] | None = None,
+) -> StaticAnalysisResult:
     result = StaticAnalysisResult()
     _detect_from_root_files(root, result)
     _parse_pyproject_signals(root, result)
@@ -1103,7 +1195,13 @@ def scan_repository(root: Path) -> StaticAnalysisResult:
     _detect_from_package_json(root, result)
     _detect_from_workflows(root, result)
     result.container_environment = _scan_container_environment(root)
-    result.documentation = _scan_markdown_docs(root)
+    documentation = _scan_markdown_docs(root)
+    for ref in documentation_refs or []:
+        documentation = _merge_documentation_assessments(
+            documentation,
+            _scan_markdown_docs_from_git_ref(root, ref),
+        )
+    result.documentation = documentation
 
     for parser in (
         _parse_ruff_rule_count,

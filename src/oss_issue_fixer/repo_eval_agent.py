@@ -105,6 +105,43 @@ def _git_remote_origin(repo_path: Path) -> str:
     return (proc.stdout or "").strip()
 
 
+def _git_run(repo_path: Path, args: list[str], timeout: int = 60) -> tuple[int, str, str]:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=str(repo_path),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+        timeout=timeout,
+    )
+    return proc.returncode, proc.stdout or "", proc.stderr or ""
+
+
+def _git_is_repo(repo_path: Path) -> bool:
+    return (repo_path / ".git").exists() or (repo_path / ".gitcode").exists()
+
+
+def _git_ref_exists(repo_path: Path, ref: str) -> bool:
+    rc, _, _ = _git_run(repo_path, ["rev-parse", "--verify", ref])
+    return rc == 0
+
+
+def _git_remote_default_ref(repo_path: Path) -> str:
+    rc, stdout, _ = _git_run(
+        repo_path,
+        ["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"],
+    )
+    ref = stdout.strip()
+    if rc == 0 and ref:
+        return ref
+    for candidate in ("origin/master", "origin/main"):
+        if _git_ref_exists(repo_path, candidate):
+            return candidate
+    return ""
+
+
 def _window_start(days: int) -> datetime:
     return datetime.now(UTC) - timedelta(days=max(0, days))
 
@@ -228,7 +265,10 @@ class RepoEvalAgent:
     def evaluate_repo(self, repo: RepoEvalPolicy) -> RepoEvaluationResult:
         errors: list[str] = []
         repo_path = self._resolve_repo(repo, errors)
-        static = scan_repository(repo_path)
+        static = scan_repository(
+            repo_path,
+            documentation_refs=self._documentation_refs(repo_path, repo.local),
+        )
         if self.cfg.enable_command_inference:
             infer_local_commands(repo_path, static)
 
@@ -287,10 +327,36 @@ class RepoEvalAgent:
         )
         return result
 
+    def _documentation_refs(
+        self,
+        repo_path: Path,
+        local_cfg: LocalEvalConfig,
+    ) -> list[str]:
+        refs = list(local_cfg.documentation_refs)
+        if refs:
+            return refs
+        if not _git_is_repo(repo_path):
+            return []
+        default_ref = _git_remote_default_ref(repo_path)
+        return [default_ref] if default_ref else []
+
     def _resolve_repo(self, repo: RepoEvalPolicy, errors: list[str]) -> Path:
         if repo.local_path:
             local_path = Path(repo.local_path).resolve()
             if local_path.exists():
+                if repo.local.refresh_local_repo and _git_is_repo(local_path):
+                    try:
+                        rc, _, stderr = _git_run(
+                            local_path,
+                            ["fetch", "origin", "--prune"],
+                            timeout=300,
+                        )
+                        if rc != 0:
+                            errors.append(
+                                f"failed to refresh local repo: {_excerpt(stderr)}"
+                            )
+                    except Exception as exc:
+                        errors.append(f"failed to refresh local repo: {exc}")
                 return local_path
             errors.append(f"local_path not found: {local_path}")
         clone_url = repo.clone_url or f"https://github.com/{repo.name}.git"
@@ -315,6 +381,7 @@ class RepoEvalAgent:
             return CommandExecutionResult(status="disabled", command=command)
 
         runner = (local_cfg.runner or "host").strip().lower()
+        timeout_duration_sec: float | None = None
 
         def build_subprocess_args() -> dict[str, Any]:
             if runner == "wsl":
@@ -337,19 +404,24 @@ class RepoEvalAgent:
             }
 
         def run_once() -> tuple[float, subprocess.CompletedProcess[str]]:
+            nonlocal timeout_duration_sec
             start = time.perf_counter()
             proc_args = build_subprocess_args()
-            proc = subprocess.run(
-                proc_args["args"],
-                cwd=proc_args["cwd"],
-                shell=proc_args["shell"],
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
-                check=False,
-                timeout=timeout_sec,
-            )
+            try:
+                proc = subprocess.run(
+                    proc_args["args"],
+                    cwd=proc_args["cwd"],
+                    shell=proc_args["shell"],
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    capture_output=True,
+                    check=False,
+                    timeout=timeout_sec,
+                )
+            except subprocess.TimeoutExpired:
+                timeout_duration_sec = time.perf_counter() - start
+                raise
             duration = time.perf_counter() - start
             return duration, proc
 
@@ -361,6 +433,7 @@ class RepoEvalAgent:
             return CommandExecutionResult(
                 status="timeout",
                 command=command,
+                duration_sec=timeout_duration_sec or float(timeout_sec),
                 returncode=None,
                 stderr_excerpt=f"timeout after {timeout_sec}s",
             )

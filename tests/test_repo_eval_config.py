@@ -21,6 +21,8 @@ repos:
       code_check_command: pre-commit run -a
       runner: wsl
       wsl_distro: Ubuntu
+      refresh_local_repo: false
+      documentation_refs: [origin/master]
     ai:
       enabled: true
       provider: codex
@@ -42,6 +44,8 @@ repos:
     assert cfg.repos[0].local.code_check_command == "pre-commit run -a"
     assert cfg.repos[0].local.runner == "wsl"
     assert cfg.repos[0].local.wsl_distro == "Ubuntu"
+    assert cfg.repos[0].local.refresh_local_repo is False
+    assert cfg.repos[0].local.documentation_refs == ["origin/master"]
     assert cfg.repos[0].ai.provider == "codex"
     assert cfg.repos[0].github.pr_window_days == 14
     assert cfg.repos[0].github.github_token_env == "MY_GITHUB_TOKEN"

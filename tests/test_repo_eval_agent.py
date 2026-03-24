@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 from oss_issue_fixer.repo_eval_agent import RepoEvalAgent, _normalize_host_command
-from oss_issue_fixer.repo_eval_models import RepoEvalAppConfig, RepoEvalPolicy
+from oss_issue_fixer.repo_eval_models import LocalEvalConfig, RepoEvalAppConfig, RepoEvalPolicy
 
 
 def test_collect_pr_metrics_uses_git_remote_to_detect_gitcode(tmp_path: Path):
@@ -179,3 +179,22 @@ def test_normalize_host_command_translates_unix_env_prefix():
     assert "$env:VLLM_USE_PRECOMPILED='1'" in normalized
     assert "$env:UV_INDEX='https://example.invalid'" in normalized
     assert normalized.endswith("uv pip install -e .")
+
+
+def test_run_local_command_records_timeout_duration(tmp_path: Path):
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(enable_local_commands=True),
+        disable_ai=True,
+    )
+
+    result = agent._run_local_command(
+        repo_path=tmp_path,
+        command='python -c "import time; time.sleep(2)"',
+        local_cfg=LocalEvalConfig(runner="host"),
+        timeout_sec=1,
+        run_twice=False,
+    )
+
+    assert result.status == "timeout"
+    assert result.duration_sec is not None
+    assert result.duration_sec >= 1.0

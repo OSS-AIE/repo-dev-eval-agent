@@ -12,6 +12,7 @@ from .agent import FixerAgent
 from .config import load_config
 from .repo_eval_agent import RepoEvalAgent
 from .repo_eval_config import load_repo_eval_config
+from .repo_eval_input import load_repos_from_xlsx
 from .repo_eval_models import (
     AIEvalConfig,
     LocalEvalConfig,
@@ -19,7 +20,7 @@ from .repo_eval_models import (
     RepoEvalPolicy,
     RemoteEvalConfig,
 )
-from .repo_eval_report import render_repo_eval_markdown
+from .repo_eval_report import render_repo_eval_html, render_repo_eval_markdown
 from .scheduler import run_daily
 from .smoke import run_local_smoke
 
@@ -133,9 +134,11 @@ def _write_eval_reports(
     results,
     report_md_path: str,
     report_json_path: str,
+    report_html_path: str = "",
 ) -> None:
     report_md = render_repo_eval_markdown(results)
-    print(report_md)
+    if not report_md_path and not report_json_path and not report_html_path:
+        print(report_md)
 
     if report_md_path:
         out_md = Path(report_md_path)
@@ -155,6 +158,42 @@ def _write_eval_reports(
             encoding="utf-8",
         )
         print(f"json report written: {out_json.resolve()}")
+
+    if report_html_path:
+        out_html = Path(report_html_path)
+        out_html.parent.mkdir(parents=True, exist_ok=True)
+        out_html.write_text(render_repo_eval_html(results), encoding="utf-8")
+        print(f"html report written: {out_html.resolve()}")
+
+
+def _dedupe_keep_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+def _load_repo_inputs(
+    repo_args: list[str],
+    *,
+    repo_xlsx: str = "",
+    repo_sheet: str = "",
+    repo_limit: int = 0,
+    repo_offset: int = 0,
+) -> list[str]:
+    values = list(repo_args or [])
+    if repo_xlsx:
+        values.extend(load_repos_from_xlsx(repo_xlsx, repo_sheet))
+    deduped = _dedupe_keep_order([item.strip() for item in values if item and item.strip()])
+    if repo_offset > 0:
+        deduped = deduped[repo_offset:]
+    if repo_limit > 0:
+        deduped = deduped[:repo_limit]
+    return deduped
 
 
 def main() -> None:
@@ -183,19 +222,29 @@ def main() -> None:
     evaluate = sub.add_parser("evaluate-repos")
     evaluate.add_argument("--config", required=True)
     evaluate.add_argument("--repo", action="append", default=[])
+    evaluate.add_argument("--repo-xlsx", default="")
+    evaluate.add_argument("--repo-sheet", default="")
+    evaluate.add_argument("--repo-limit", type=int, default=0)
+    evaluate.add_argument("--repo-offset", type=int, default=0)
     evaluate.add_argument("--report-md", default="")
     evaluate.add_argument("--report-json", default="")
+    evaluate.add_argument("--report-html", default="")
     evaluate.add_argument("--enable-local-commands", action="store_true")
     evaluate.add_argument("--disable-local-commands", action="store_true")
     evaluate.add_argument("--no-ai", action="store_true")
 
     assess = sub.add_parser("assess-repos")
-    assess.add_argument("--repo", action="append", required=True, default=[])
+    assess.add_argument("--repo", action="append", default=[])
+    assess.add_argument("--repo-xlsx", default="")
+    assess.add_argument("--repo-sheet", default="")
+    assess.add_argument("--repo-limit", type=int, default=0)
+    assess.add_argument("--repo-offset", type=int, default=0)
     assess.add_argument("--workspace-root", default=".work/eval")
     assess.add_argument("--report-root", default="reports/eval")
     assess.add_argument("--report-prefix", default="")
     assess.add_argument("--report-md", default="")
     assess.add_argument("--report-json", default="")
+    assess.add_argument("--report-html", default="")
     assess.add_argument("--recent-pr-limit", type=int, default=20)
     assess.add_argument("--recent-review-pr-limit", type=int, default=20)
     assess.add_argument("--pr-window-days", type=int, default=30)
@@ -237,16 +286,35 @@ def main() -> None:
             ),
             disable_ai=args.no_ai,
         )
-        allow = set(args.repo) if args.repo else None
+        repo_inputs = _load_repo_inputs(
+            args.repo,
+            repo_xlsx=args.repo_xlsx,
+            repo_sheet=args.repo_sheet,
+            repo_limit=args.repo_limit,
+            repo_offset=args.repo_offset,
+        )
+        allow = set(repo_inputs) if repo_inputs else None
         results = agent.run(repo_allowlist=allow)
         _write_eval_reports(
             results=results,
             report_md_path=args.report_md,
             report_json_path=args.report_json,
+            report_html_path=args.report_html,
         )
         return
 
     if args.cmd == "assess-repos":
+        repo_inputs = _load_repo_inputs(
+            args.repo,
+            repo_xlsx=args.repo_xlsx,
+            repo_sheet=args.repo_sheet,
+            repo_limit=args.repo_limit,
+            repo_offset=args.repo_offset,
+        )
+        if not repo_inputs:
+            raise SystemExit(
+                "assess-repos requires at least one repo via --repo or --repo-xlsx"
+            )
         remote_cfg = RemoteEvalConfig(
             workflow_events=["pull_request", "pull_request_target"],
             pr_window_days=args.pr_window_days,
@@ -269,7 +337,7 @@ def main() -> None:
                 remote_cfg=remote_cfg,
                 ai_cfg=ai_cfg,
             )
-            for raw in args.repo
+            for raw in repo_inputs
         ]
         cfg = RepoEvalAppConfig(
             workspace_root=args.workspace_root,
@@ -293,10 +361,12 @@ def main() -> None:
         prefix = args.report_prefix or f"repo-eval-{timestamp}"
         report_md = args.report_md or str(Path(args.report_root) / f"{prefix}.md")
         report_json = args.report_json or str(Path(args.report_root) / f"{prefix}.json")
+        report_html = args.report_html or str(Path(args.report_root) / f"{prefix}.html")
         _write_eval_reports(
             results=results,
             report_md_path=report_md,
             report_json_path=report_json,
+            report_html_path=report_html,
         )
         return
 

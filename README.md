@@ -65,11 +65,39 @@ This one-shot command will:
 
 - resolve repo URLs / local paths automatically
 - scan all Markdown files instead of only `README.md`
+- optionally merge Markdown from remote refs such as `origin/main` / `origin/master`
 - infer local build / unit-test / code-check commands
 - optionally run commands through WSL for Linux-oriented repos
 - compute GitHub PR workflow average duration within a configurable time window
 - detect AI code-review signals from GitHub reviews/comments or GitCode PR comments
-- generate Markdown and JSON reports in one run
+- generate Markdown, HTML, and JSON reports in one run
+
+Batch evaluation from Excel:
+
+```powershell
+$env:PYTHONPATH='src'
+python -m oss_issue_fixer.cli assess-repos `
+  --repo-xlsx "C:\Users\Administrator\Downloads\openlibing代码仓数据.xlsx" `
+  --report-root reports/eval `
+  --report-prefix openlibing
+```
+
+Excel input expectations:
+
+- the first sheet is used by default
+- or pass `--repo-sheet <sheet-name>`
+- use `--repo-offset` / `--repo-limit` to run the workbook in chunks
+- supported URL column headers:
+  - `仓库链接`
+  - `repo_url`
+  - `repository_url`
+  - `url`
+
+HTML report behavior:
+
+- top-level summary table across all repositories
+- one tab per repository for detailed findings
+- suitable for sharing as a single-file report artifact
 
 Optional AI summary adapter:
 

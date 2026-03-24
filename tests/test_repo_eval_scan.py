@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from oss_issue_fixer.repo_eval_models import ContainerRuntimeProbe
@@ -150,6 +151,66 @@ docker pull example/project:latest
     assert result.inferred_build_command == "python setup.py bdist_wheel"
     assert result.inferred_unit_test_command == "pytest tests/"
     assert result.inferred_code_check_command == "pre-commit run -a"
+
+
+def test_scan_repository_can_merge_markdown_from_git_ref(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan._probe_container_runtime",
+        lambda: ContainerRuntimeProbe(
+            engine="docker",
+            cli_available=True,
+            daemon_available=True,
+            server_version="29.2.0",
+        ),
+    )
+    subprocess.run("git init", cwd=tmp_path, shell=True, check=True)
+    subprocess.run(
+        'git config user.email "tester@example.com"',
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+    subprocess.run(
+        'git config user.name "Test User"',
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+    docs_dir = tmp_path / "docs" / "zh"
+    docs_dir.mkdir(parents=True)
+    remote_doc = docs_dir / "developer_guide.md"
+    remote_doc.write_text(
+        """
+# 开发者指南
+
+```bash
+docker run --rm example/image:latest bash
+python setup.py bdist_wheel
+bash tests/run_test.sh
+```
+""".strip(),
+        encoding="utf-8",
+    )
+    subprocess.run("git add .", cwd=tmp_path, shell=True, check=True)
+    subprocess.run(
+        'git commit -m "add remote docs"',
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+    remote_doc.unlink()
+
+    result = scan_repository(tmp_path, documentation_refs=["HEAD"])
+    infer_local_commands(tmp_path, result)
+
+    assert result.documentation.markdown_files_scanned == 1
+    assert "HEAD:docs/zh/developer_guide.md" in result.documentation.relevant_files
+    assert any(item.category == "container" for item in result.documentation.commands)
+    assert result.inferred_build_command == "python setup.py bdist_wheel"
+    assert result.inferred_unit_test_command == "bash tests/run_test.sh"
 
 
 def test_scan_repository_detects_runnable_docker_environment(
