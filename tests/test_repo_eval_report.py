@@ -17,7 +17,7 @@ from oss_issue_fixer.repo_eval_report import (
 )
 
 
-def _sample_result() -> RepoEvaluationResult:
+def _failing_result() -> RepoEvaluationResult:
     return RepoEvaluationResult(
         repo="Ascend/MindIE-SD",
         local_path="D:\\vbox\\repos\\MindIE-SD",
@@ -99,7 +99,7 @@ def _sample_result() -> RepoEvaluationResult:
             sampled_pull_count=1,
             ai_review_supported=True,
             ai_review_evidence=["pr#215 comment by ascend-robot"],
-            collection_note="GitCode 适配当前只支持 PR 评论/AI 检视信号采集，PR workflow 时长与资源指标暂未接入",
+            collection_note="GitCode 适配当前只支持 PR 评论与 AI 检视信号采集，PR workflow 时长与资源指标暂未接入",
         ),
         documentation_issues=[
             DocumentationIssue(
@@ -109,38 +109,122 @@ def _sample_result() -> RepoEvaluationResult:
                 summary="测试失败根因在仓库脚本内容或 CRLF/LF 行尾格式，不是 Markdown 描述不清",
                 evidence=["tests/run_test.sh: line 4: $'\\r': command not found"],
                 recommendation="修复脚本为 LF 行尾，并增加 CI 烟测。",
-            )
+            ),
+            DocumentationIssue(
+                category="container_docs_not_self_contained",
+                root_cause="documentation",
+                severity="high",
+                summary="Markdown 提到了容器路径，但仓库内没有可直接复现的容器定义",
+                evidence=["docker/README.md"],
+                recommendation="补充 Dockerfile 或 docker load / docker pull 的可执行入口。",
+            ),
         ],
     )
 
 
-def test_render_repo_eval_markdown_includes_failure_excerpts_and_doc_issues():
-    report = render_repo_eval_markdown([_sample_result()])
+def _successful_result() -> RepoEvaluationResult:
+    return RepoEvaluationResult(
+        repo="OSS-AIE/repo-dev-eval-agent",
+        local_path="D:\\vbox\\repos\\repo_dev_eval_agent",
+        static=StaticAnalysisResult(
+            style_defined=True,
+            style_evidence=["pyproject.toml:[tool.ruff]", ".pre-commit-config.yaml"],
+            code_check_supported=True,
+            check_tools=["pre-commit", "ruff", "pytest"],
+            rule_count_estimate=12,
+            auto_fix_supported=True,
+            auto_fix_evidence=["ruff format", "pre-commit"],
+            inferred_build_command="python -m build",
+            inferred_unit_test_command="pytest tests -q",
+            inferred_code_check_command="pre-commit run -a",
+            inference_evidence=["pyproject.toml includes build backend"],
+            documentation=DocumentationAssessment(
+                markdown_files_scanned=1,
+                relevant_files=["README.md"],
+                commands=[
+                    DocumentationCommand(
+                        source_file="README.md",
+                        category="build",
+                        command="python -m build",
+                    ),
+                    DocumentationCommand(
+                        source_file="README.md",
+                        category="test",
+                        command="pytest tests -q",
+                    ),
+                    DocumentationCommand(
+                        source_file="README.md",
+                        category="check",
+                        command="pre-commit run -a",
+                    ),
+                ],
+            ),
+        ),
+        incremental_build=CommandExecutionResult(
+            status="ok",
+            command="python -m build",
+            duration_sec=6.37,
+            returncode=0,
+            stdout_excerpt="Successfully built wheel and sdist",
+        ),
+        code_check=CommandExecutionResult(
+            status="ok",
+            command="pre-commit run -a",
+            duration_sec=4.12,
+            returncode=0,
+            stdout_excerpt="Passed",
+        ),
+        unit_test=CommandExecutionResult(
+            status="ok",
+            command="pytest tests -q",
+            duration_sec=9.45,
+            returncode=0,
+            stdout_excerpt="36 passed",
+        ),
+        pr_metrics=PullRequestMetrics(
+            remote_platform="github",
+            pr_window_days=30,
+            sampled_pull_count=8,
+            workflow_run_count=16,
+            latest_duration_sec=411.0,
+            median_duration_sec=355.0,
+            average_duration_sec=368.5,
+            estimated_cpu_core_minutes=42.5,
+            ai_review_supported=True,
+            ai_review_evidence=["pr#2 comment by github-actions[bot]"],
+            workflow_run_evidence=[
+                "run:1 CI pull_request",
+                "run:2 CodeQL pull_request",
+            ],
+            collection_note="collected from GitHub Actions and PR APIs within the last 30 days",
+        ),
+    )
+
+
+def test_render_repo_eval_markdown_includes_root_causes_and_success_evidence():
+    report = render_repo_eval_markdown([_failing_result(), _successful_result()])
 
     assert "开源代码仓开发体验评估报告" in report
-    assert "增量构建失败摘要" in report
-    assert "代码检测失败摘要" in report
-    assert "UT 失败摘要" in report
-    assert "docker_documented" in report
-    assert "文档中的代码检测命令" in report
-    assert "Markdown 改进建议总览" in report
-    assert "repository_script_issue" in report
-    assert "修复脚本为 LF 行尾" in report
-    assert "N/A" in report
-    assert "N/A 原因分析" in report
-    assert "当前 GitCode 适配只采集 PR 评论与 AI 检视信号" in report
-    assert "本地增量构建时间 显示为 N/A" in report
+    assert "失败根因分析" in report
+    assert "成功证据链" in report
+    assert "无可运行镜像或容器定义" in report
+    assert "仓库脚本问题" in report
+    assert "PR 流水线指标暂未接入" in report
+    assert "命令来源: 仓库结构推断" in report
+    assert "返回码: 0" in report
+    assert "run:1 CI pull_request" in report
 
 
-def test_render_repo_eval_html_contains_summary_and_tabs():
-    html = render_repo_eval_html([_sample_result(), _sample_result()])
+def test_render_repo_eval_html_contains_cards_tabs_and_evidence_sections():
+    html = render_repo_eval_html([_failing_result(), _successful_result()])
 
     assert '<html lang="zh-CN">' in html
     assert "开源代码仓开发体验评估报告" in html
     assert "仓库汇总" in html
     assert "repo-tab active" in html
     assert "showRepoTab" in html
-    assert "Ascend/MindIE-SD" in html
-    assert "Markdown 改进建议总览" in html
-    assert "pr#215 comment by ascend-robot" in html
-    assert "N/A 原因分析" in html
+    assert "成功证据链" in html
+    assert "失败根因分析" in html
+    assert "镜像环境下载失败" not in html
+    assert "无可运行镜像或容器定义" in html
+    assert "run:2 CodeQL pull_request" in html
