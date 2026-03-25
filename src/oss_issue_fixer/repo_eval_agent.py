@@ -23,7 +23,13 @@ from .repo_eval_models import (
     RepoEvaluationResult,
     RunnerCapacity,
 )
-from .repo_eval_scan import infer_local_commands, scan_repository
+from .repo_eval_scan import (
+    _skill_command_prefix,
+    _skill_local_command,
+    _skill_local_setup_command,
+    infer_local_commands,
+    scan_repository,
+)
 
 DEFAULT_AI_REVIEW_MARKERS = (
     "copilot",
@@ -279,6 +285,7 @@ class RepoEvalAgent:
         self.cfg = cfg
         self.workspace_root = Path(cfg.workspace_root).resolve()
         self.workspace_root.mkdir(parents=True, exist_ok=True)
+        self._setup_cache: dict[tuple[str, str, str], CommandExecutionResult] = {}
         self.enable_local_commands = (
             cfg.enable_local_commands
             if enable_local_commands_override is None
@@ -305,14 +312,29 @@ class RepoEvalAgent:
         if self.cfg.enable_command_inference:
             infer_local_commands(repo_path, static)
 
+        runner = (repo.local.runner or "host").strip().lower()
+        setup_command = repo.local.setup_command or _skill_local_setup_command(
+            repo.name, runner
+        )
+        command_prefix = repo.local.command_prefix or _skill_command_prefix(
+            repo.name, runner
+        )
+
         build_command = repo.local.incremental_build_command or repo.local.build_command
         if not build_command:
-            build_command = static.inferred_build_command
+            build_command = (
+                _skill_local_command(repo.name, "build_command", runner)
+                or static.inferred_build_command
+            )
         unit_test_command = (
-            repo.local.unit_test_command or static.inferred_unit_test_command
+            repo.local.unit_test_command
+            or _skill_local_command(repo.name, "unit_test_command", runner)
+            or static.inferred_unit_test_command
         )
         code_check_command = (
-            repo.local.code_check_command or static.inferred_code_check_command
+            repo.local.code_check_command
+            or _skill_local_command(repo.name, "code_check_command", runner)
+            or static.inferred_code_check_command
         )
 
         incremental_build = self._run_local_command(
@@ -321,6 +343,8 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=True,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
         )
         unit_test = self._run_local_command(
             repo_path,
@@ -328,6 +352,8 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=False,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
         )
         code_check = self._run_local_command(
             repo_path,
@@ -335,6 +361,8 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=False,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
         )
 
         pr_metrics = self._collect_pr_metrics(
@@ -415,6 +443,8 @@ class RepoEvalAgent:
         local_cfg: LocalEvalConfig,
         timeout_sec: int,
         run_twice: bool,
+        setup_command: str = "",
+        command_prefix: str = "",
     ) -> CommandExecutionResult:
         if not command:
             return CommandExecutionResult(status="not_configured")
@@ -424,11 +454,11 @@ class RepoEvalAgent:
         runner = (local_cfg.runner or "host").strip().lower()
         timeout_duration_sec: float | None = None
 
-        def build_subprocess_args() -> dict[str, Any]:
+        def build_subprocess_args(shell_command: str) -> dict[str, Any]:
             if runner == "wsl":
                 wsl_path = _windows_to_wsl_path(repo_path)
                 bash_script = (
-                    f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {command}"
+                    f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {shell_command}"
                 )
                 args = ["wsl.exe"]
                 if local_cfg.wsl_distro:
@@ -439,17 +469,19 @@ class RepoEvalAgent:
                     "cwd": str(repo_path),
                     "shell": False,
                 }
-            normalized_command = _normalize_host_command(command)
+            normalized_command = _normalize_host_command(shell_command)
             return {
                 "args": normalized_command,
                 "cwd": str(repo_path),
                 "shell": True,
             }
 
-        def run_once() -> tuple[float, subprocess.CompletedProcess[str]]:
+        def run_once(
+            shell_command: str,
+        ) -> tuple[float, subprocess.CompletedProcess[str]]:
             nonlocal timeout_duration_sec
             start = time.perf_counter()
-            proc_args = build_subprocess_args()
+            proc_args = build_subprocess_args(shell_command)
             try:
                 proc = subprocess.run(
                     proc_args["args"],
@@ -468,30 +500,129 @@ class RepoEvalAgent:
             duration = time.perf_counter() - start
             return duration, proc
 
+        setup_result = CommandExecutionResult()
+        setup_from_cache = False
+        if setup_command:
+            cache_key = (str(repo_path), runner, setup_command)
+            cached = self._setup_cache.get(cache_key)
+            if cached is None:
+                try:
+                    setup_duration, setup_proc = run_once(setup_command)
+                except subprocess.TimeoutExpired:
+                    setup_result = CommandExecutionResult(
+                        status="timeout",
+                        command=command,
+                        setup_command=setup_command,
+                        setup_status="timeout",
+                        setup_duration_sec=timeout_duration_sec or float(timeout_sec),
+                        setup_stderr_excerpt=f"timeout after {timeout_sec}s",
+                    )
+                    self._setup_cache[cache_key] = setup_result
+                    return setup_result
+                except Exception as exc:
+                    setup_result = CommandExecutionResult(
+                        status="error",
+                        command=command,
+                        setup_command=setup_command,
+                        setup_status="error",
+                        setup_stderr_excerpt=str(exc),
+                    )
+                    self._setup_cache[cache_key] = setup_result
+                    return setup_result
+                setup_result = CommandExecutionResult(
+                    status="ok" if setup_proc.returncode == 0 else "failed",
+                    command=command,
+                    setup_command=setup_command,
+                    setup_status="ok" if setup_proc.returncode == 0 else "failed",
+                    setup_duration_sec=setup_duration,
+                    returncode=setup_proc.returncode if setup_proc.returncode else None,
+                    setup_stdout_excerpt=_excerpt(setup_proc.stdout),
+                    setup_stderr_excerpt=_excerpt(setup_proc.stderr),
+                )
+                self._setup_cache[cache_key] = setup_result
+            else:
+                setup_result = cached
+                setup_from_cache = True
+
+            if setup_result.setup_status not in {"", "ok"}:
+                return CommandExecutionResult(
+                    status=setup_result.setup_status or setup_result.status,
+                    command=command,
+                    setup_command=setup_command,
+                    setup_status=setup_result.setup_status,
+                    setup_duration_sec=setup_result.setup_duration_sec,
+                    setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stdout_excerpt=setup_result.setup_stdout_excerpt,
+                )
+
+            if command.strip() and command.strip() in setup_command:
+                return CommandExecutionResult(
+                    status="ok",
+                    command=command,
+                    duration_sec=setup_result.setup_duration_sec,
+                    returncode=0,
+                    setup_command=setup_command,
+                    setup_status=setup_result.setup_status,
+                    setup_duration_sec=setup_result.setup_duration_sec,
+                    setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    stderr_excerpt=setup_result.setup_stderr_excerpt,
+                )
+
+        effective_command = command
+        if command_prefix:
+            effective_command = f"{command_prefix}; {command}"
         try:
             if run_twice:
-                _, _ = run_once()
-            duration, proc = run_once()
+                _, _ = run_once(effective_command)
+            duration, proc = run_once(effective_command)
         except subprocess.TimeoutExpired:
             return CommandExecutionResult(
                 status="timeout",
                 command=command,
                 duration_sec=timeout_duration_sec or float(timeout_sec),
                 returncode=None,
+                setup_command=setup_command,
+                setup_status=setup_result.setup_status,
+                setup_duration_sec=setup_result.setup_duration_sec,
+                setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
                 stderr_excerpt=f"timeout after {timeout_sec}s",
             )
         except Exception as exc:
             return CommandExecutionResult(
                 status="error",
                 command=command,
+                setup_command=setup_command,
+                setup_status=setup_result.setup_status,
+                setup_duration_sec=setup_result.setup_duration_sec,
+                setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
                 stderr_excerpt=str(exc),
             )
+
+        total_duration = duration
+        if (
+            setup_command
+            and setup_result.setup_status == "ok"
+            and setup_result.setup_duration_sec
+            and not setup_from_cache
+        ):
+            total_duration += setup_result.setup_duration_sec
 
         return CommandExecutionResult(
             status="ok" if proc.returncode == 0 else "failed",
             command=command,
-            duration_sec=duration,
+            duration_sec=total_duration,
             returncode=proc.returncode,
+            setup_command=setup_command,
+            setup_status=("reused" if setup_from_cache else setup_result.setup_status),
+            setup_duration_sec=setup_result.setup_duration_sec,
+            setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+            setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
             stdout_excerpt=_excerpt(proc.stdout),
             stderr_excerpt=_excerpt(proc.stderr),
         )
