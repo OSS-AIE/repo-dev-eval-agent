@@ -300,6 +300,7 @@ class RepoEvalAgent:
         static = scan_repository(
             repo_path,
             documentation_refs=self._documentation_refs(repo_path, repo.local),
+            repo_name=repo.name,
         )
         if self.cfg.enable_command_inference:
             infer_local_commands(repo_path, static)

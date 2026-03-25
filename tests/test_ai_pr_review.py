@@ -6,9 +6,7 @@ from pathlib import Path
 
 
 def _load_module():
-    script_path = (
-        Path(__file__).resolve().parents[1] / "tools" / "ai_pr_review.py"
-    )
+    script_path = Path(__file__).resolve().parents[1] / "tools" / "ai_pr_review.py"
     spec = importlib.util.spec_from_file_location("ai_pr_review", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -119,7 +117,11 @@ def test_main_skips_when_provider_key_missing(monkeypatch, capsys):
     monkeypatch.setattr(
         module,
         "_fetch_pr_snapshot",
-        lambda context: {"pr": {"html_url": "https://example.invalid/pr/12"}, "files": [], "diff": ""},
+        lambda context: {
+            "pr": {"html_url": "https://example.invalid/pr/12"},
+            "files": [],
+            "diff": "",
+        },
     )
     published: dict[str, str] = {}
 
