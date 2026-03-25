@@ -213,6 +213,129 @@ bash tests/run_test.sh
     assert result.inferred_unit_test_command == "bash tests/run_test.sh"
 
 
+def test_scan_repository_follows_external_vllm_doc_skills(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan._probe_container_runtime",
+        lambda: ContainerRuntimeProbe(
+            engine="docker",
+            cli_available=True,
+            daemon_available=True,
+            server_version="29.2.0",
+        ),
+    )
+    (tmp_path / "README.md").write_text(
+        (
+            "Please check out [Contributing to vLLM]"
+            "(https://docs.vllm.ai/en/latest/contributing/index.html)"
+            " for how to get involved.\n"
+        ),
+        encoding="utf-8",
+    )
+
+    class _Resp:
+        def __init__(self, text: str) -> None:
+            self.text = text
+            self.headers = {"Content-Type": "text/html; charset=utf-8"}
+
+        def raise_for_status(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan.requests.get",
+        lambda url, timeout=30: _Resp(
+            """
+            <html><body>
+            <h1>Contributing to vLLM</h1>
+            <pre><code>uv venv --python 3.12 --seed
+VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
+uv pip install pytest pytest-asyncio
+pre-commit run -a
+pytest tests/
+            </code></pre>
+            </body></html>
+            """
+        ),
+    )
+
+    result = scan_repository(tmp_path, repo_name="vllm-project/vllm")
+    infer_local_commands(tmp_path, result)
+
+    assert any(
+        item.source_file == "https://docs.vllm.ai/en/latest/contributing/index.html"
+        and item.category == "build"
+        for item in result.documentation.commands
+    )
+    assert any("community doc skill" in note for note in result.documentation.notes)
+    assert result.inferred_build_command.startswith("VLLM_USE_PRECOMPILED=1 uv pip")
+    assert result.inferred_unit_test_command == "pytest tests/"
+    assert result.inferred_code_check_command == "pre-commit run -a"
+
+
+def test_scan_repository_maps_gitcode_blob_skill_to_git_ref(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan._probe_container_runtime",
+        lambda: ContainerRuntimeProbe(
+            engine="docker",
+            cli_available=True,
+            daemon_available=True,
+            server_version="29.2.0",
+        ),
+    )
+    subprocess.run("git init", cwd=tmp_path, shell=True, check=True)
+    subprocess.run(
+        'git config user.email "tester@example.com"',
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+    subprocess.run(
+        'git config user.name "Test User"',
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+    (tmp_path / "README.md").write_text(
+        (
+            "[开发指南]"
+            "(https://gitcode.com/Ascend/MindIE-SD/blob/master/docs/zh/developer_guide.md)\n"
+        ),
+        encoding="utf-8",
+    )
+    zh_dir = tmp_path / "docs" / "zh"
+    zh_dir.mkdir(parents=True)
+    (zh_dir / "developer_guide.md").write_text(
+        """
+        ```bash
+        docker run --rm mindie:2.2.RC1 bash
+        python setup.py bdist_wheel
+        bash tests/run_UT_test.sh
+        ```
+        """.strip(),
+        encoding="utf-8",
+    )
+    subprocess.run("git add .", cwd=tmp_path, shell=True, check=True)
+    subprocess.run('git commit -m "add zh guide"', cwd=tmp_path, shell=True, check=True)
+
+    result = scan_repository(tmp_path, repo_name="Ascend/MindIE-SD")
+    infer_local_commands(tmp_path, result)
+
+    assert (
+        "master:docs/zh/developer_guide.md" in result.documentation.relevant_files
+        or (
+            "origin/master:docs/zh/developer_guide.md"
+            in result.documentation.relevant_files
+        )
+    )
+    assert any(item.category == "container" for item in result.documentation.commands)
+    assert result.inferred_build_command == "python setup.py bdist_wheel"
+
+
 def test_scan_repository_detects_runnable_docker_environment(
     tmp_path: Path,
     monkeypatch,

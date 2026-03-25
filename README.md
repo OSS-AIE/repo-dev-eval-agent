@@ -6,6 +6,7 @@ readiness, Markdown quality, and PR pipeline efficiency.
 ## What Is Implemented
 
 - Full-repository Markdown scanning, not only `README.md`
+- Community doc skill registry for repos whose README points to external setup guides
 - Local build / unit-test / code-check command inference and execution
 - Docker / devcontainer / workflow container readiness detection
 - GitHub Actions PR duration and runner resource estimation
@@ -96,6 +97,11 @@ Excel input expectations:
 Tracked sample input:
 
 - `input/openlibing-code-repos.xlsx`
+
+Community doc skills:
+
+- `skills/community_docs/registry.yaml`
+- Use this registry when a repository points to external docs sites or GitHub / GitCode blob pages for local build, test, code-check, or container instructions.
 
 HTML report behavior:
 

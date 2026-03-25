@@ -744,7 +744,15 @@ def _render_html_list(title: str, values: list[str]) -> str:
             f'<div class="kv"><div class="k">{escape(title)}</div>'
             '<div class="v muted">N/A</div></div>'
         )
-    items = "".join(f"<li>{escape(value)}</li>" for value in values)
+    visible = values[:6]
+    hidden = values[6:]
+    items = "".join(f"<li>{escape(value)}</li>" for value in visible)
+    if hidden:
+        hidden_items = "".join(f"<li>{escape(value)}</li>" for value in hidden)
+        items += (
+            f'<details class="list-details"><summary>展开剩余 {len(hidden)} 项</summary>'
+            f"<ul>{hidden_items}</ul></details>"
+        )
     return (
         f'<div class="kv"><div class="k">{escape(title)}</div>'
         f'<div class="v"><ul>{items}</ul></div></div>'
@@ -774,9 +782,19 @@ def _render_html_root_causes(causes: list[dict[str, object]]) -> str:
         return '<div class="callout ok">该指标已成功获取，无需失败根因分析。</div>'
     chunks: list[str] = []
     for cause in causes:
+        visible = list(cause["evidence"])[:4]
+        hidden = list(cause["evidence"])[4:]
         evidence = "".join(
             f"<li>{escape(str(value))}</li>" for value in cause["evidence"]
         )
+        if hidden:
+            hidden_items = "".join(f"<li>{escape(str(value))}</li>" for value in hidden)
+            evidence = "".join(
+                f"<li>{escape(str(value))}</li>" for value in visible
+            ) + (
+                f'<details class="list-details"><summary>展开更多证据 {len(hidden)} 条</summary>'
+                f"<ul>{hidden_items}</ul></details>"
+            )
         chunks.append(
             '<div class="callout warn">'
             f"<strong>{escape(str(cause['category']))}</strong>"
@@ -1001,6 +1019,8 @@ def render_repo_eval_html(results: list[RepoEvaluationResult]) -> str:
     .callout.warn {{ background: rgba(255, 241, 215, 0.75); color: #6d4a11; border-color: rgba(155, 95, 7, 0.14); margin-bottom: 10px; }}
     .callout.muted {{ background: rgba(238, 241, 245, 0.78); color: var(--neutral-fg); border-color: rgba(85, 96, 107, 0.12); }}
     .metric-card {{ background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,247,241,.94)); }}
+    .list-details {{ margin-top: 8px; }}
+    .list-details summary {{ cursor: pointer; color: var(--accent); font-weight: 700; }}
     @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(4px); }} to {{ opacity: 1; transform: translateY(0); }} }}
     @media (max-width: 920px) {{
       .page {{ padding: 18px 12px 30px; }}

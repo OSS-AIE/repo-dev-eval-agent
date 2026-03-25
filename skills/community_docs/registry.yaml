@@ -1,0 +1,15 @@
+repos:
+  - repo: vllm-project/vllm
+    allowed_domains:
+      - docs.vllm.ai
+    seed_urls:
+      - https://docs.vllm.ai/en/latest/contributing/index.html
+    notes:
+      - README 里的贡献入口会跳转到 docs.vllm.ai contributing 文档，需要继续抓取站点文档里的本地构建、测试和代码检测命令。
+  - repo: Ascend/MindIE-SD
+    allowed_domains:
+      - gitcode.com
+    seed_urls:
+      - https://gitcode.com/Ascend/MindIE-SD/blob/master/docs/zh/developer_guide.md
+    notes:
+      - GitCode 中文开发指南包含容器拉取、构建和测试说明，优先映射到本地 git ref 或远端 blob 内容。
