@@ -272,6 +272,134 @@ def test_run_local_command_records_timeout_duration(tmp_path: Path):
     assert result.duration_sec >= 1.0
 
 
+def test_run_local_command_runs_setup_once_and_reuses_environment(tmp_path: Path):
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(enable_local_commands=True),
+        disable_ai=True,
+    )
+    marker = tmp_path / "setup.txt"
+
+    first = agent._run_local_command(
+        repo_path=tmp_path,
+        command="python -c \"from pathlib import Path; print(Path('setup.txt').read_text().strip())\"",
+        local_cfg=LocalEvalConfig(runner="host"),
+        timeout_sec=30,
+        run_twice=False,
+        setup_command=(
+            'python -c "from pathlib import Path; '
+            "p=Path('setup.txt'); "
+            "p.write_text(str(int(p.read_text()) + 1) if p.exists() else '1')\""
+        ),
+    )
+
+    second = agent._run_local_command(
+        repo_path=tmp_path,
+        command="python -c \"from pathlib import Path; print(Path('setup.txt').read_text().strip())\"",
+        local_cfg=LocalEvalConfig(runner="host"),
+        timeout_sec=30,
+        run_twice=False,
+        setup_command=(
+            'python -c "from pathlib import Path; '
+            "p=Path('setup.txt'); "
+            "p.write_text(str(int(p.read_text()) + 1) if p.exists() else '1')\""
+        ),
+    )
+
+    assert first.status == "ok"
+    assert first.setup_status == "ok"
+    assert second.status == "ok"
+    assert second.setup_status == "reused"
+    assert marker.read_text(encoding="utf-8") == "1"
+
+
+def test_run_local_command_uses_setup_result_when_command_is_already_in_setup(
+    tmp_path: Path,
+):
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(enable_local_commands=True),
+        disable_ai=True,
+    )
+
+    result = agent._run_local_command(
+        repo_path=tmp_path,
+        command="python -c \"print('build')\"",
+        local_cfg=LocalEvalConfig(runner="host"),
+        timeout_sec=30,
+        run_twice=True,
+        setup_command="python -c \"print('build')\"",
+    )
+
+    assert result.status == "ok"
+    assert result.returncode == 0
+    assert result.setup_status == "ok"
+    assert "build" in result.stdout_excerpt
+
+
+def test_evaluate_repo_uses_skill_local_overrides(monkeypatch, tmp_path: Path):
+    (tmp_path / "README.md").write_text("placeholder", encoding="utf-8")
+
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_agent.scan_repository",
+        lambda repo_path, documentation_refs=None, repo_name="": __import__(
+            "oss_issue_fixer.repo_eval_models", fromlist=["StaticAnalysisResult"]
+        ).StaticAnalysisResult(),
+    )
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_agent.infer_local_commands",
+        lambda repo_path, result: None,
+    )
+    monkeypatch.setattr(
+        RepoEvalAgent,
+        "_collect_pr_metrics",
+        lambda self, repo, repo_path, ai_review_signals, errors: __import__(
+            "oss_issue_fixer.repo_eval_models", fromlist=["PullRequestMetrics"]
+        ).PullRequestMetrics(),
+    )
+    captured: list[tuple[str, str, str]] = []
+
+    def fake_run(
+        self,
+        repo_path,
+        command,
+        local_cfg,
+        timeout_sec,
+        run_twice,
+        setup_command="",
+        command_prefix="",
+    ):
+        captured.append((command, setup_command, command_prefix))
+        return __import__(
+            "oss_issue_fixer.repo_eval_models", fromlist=["CommandExecutionResult"]
+        ).CommandExecutionResult(status="disabled", command=command)
+
+    monkeypatch.setattr(RepoEvalAgent, "_run_local_command", fake_run)
+
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(
+            enable_local_commands=False,
+            repos=[
+                RepoEvalPolicy(
+                    name="vllm-project/vllm",
+                    local_path=str(tmp_path),
+                    local=LocalEvalConfig(runner="wsl", refresh_local_repo=False),
+                )
+            ],
+        ),
+        disable_ai=True,
+    )
+
+    result = agent.evaluate_repo(agent.cfg.repos[0])
+
+    assert result.repo == "vllm-project/vllm"
+    assert any(
+        command
+        == "python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q"
+        and "uv venv --python 3.12 --seed .venv" in setup_command
+        and command_prefix == "source .venv/bin/activate"
+        for command, setup_command, command_prefix in captured
+    )
+
+
 def test_resolve_repo_refreshes_remote_matching_clone_url(monkeypatch, tmp_path: Path):
     subprocess.run("git init", cwd=tmp_path, shell=True, check=True)
     subprocess.run(
