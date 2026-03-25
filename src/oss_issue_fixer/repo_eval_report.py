@@ -127,6 +127,16 @@ def _command_source_evidence(
     doc_category: str,
 ) -> list[str]:
     evidence: list[str] = []
+    if result.setup_command:
+        evidence.append(f"准备命令: {result.setup_command}")
+    if result.setup_status:
+        evidence.append(f"准备状态: {result.setup_status}")
+    if result.setup_duration_sec is not None:
+        evidence.append(f"准备耗时: {_duration_text(result.setup_duration_sec)}")
+    if result.setup_stdout_excerpt:
+        evidence.append(f"准备输出摘要: {result.setup_stdout_excerpt}")
+    if result.setup_stderr_excerpt:
+        evidence.append(f"准备失败摘要: {result.setup_stderr_excerpt}")
     if result.command:
         evidence.append(f"命令: {result.command}")
     if result.returncode is not None:
