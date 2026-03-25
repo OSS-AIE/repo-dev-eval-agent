@@ -1,12 +1,24 @@
 name: Codex PR Review
 
 on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
   pull_request_target:
     types:
       - opened
       - reopened
       - synchronize
       - ready_for_review
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to review
+        required: true
+        type: number
 
 permissions:
   contents: read
@@ -14,12 +26,12 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: codex-review-${{ github.event.pull_request.number }}
+  group: codex-review-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   review:
-    if: ${{ !github.event.pull_request.draft }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     env:
       HAS_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
@@ -27,7 +39,7 @@ jobs:
       - name: Checkout base repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.event.pull_request.base.sha }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -50,7 +62,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
           AI_REVIEW_PROVIDER: openai
           AI_REVIEW_MARKER: "<!-- oss-aie-codex-review -->"
           AI_REVIEW_HEADING: "Codex AI Code Review"
