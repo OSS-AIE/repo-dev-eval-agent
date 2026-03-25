@@ -399,7 +399,9 @@ def _scan_markdown_docs_from_git_ref(root: Path, ref: str) -> DocumentationAsses
     commands_seen: set[tuple[str, str, str]] = set()
     rc, stdout, stderr = _git_command(root, ["ls-tree", "-r", "--name-only", ref])
     if rc != 0:
-        assessment.notes.append(f"failed to scan markdown from ref {ref}: {_short_text(stderr)}")
+        assessment.notes.append(
+            f"failed to scan markdown from ref {ref}: {_short_text(stderr)}"
+        )
         return assessment
 
     for raw in stdout.splitlines():
@@ -628,7 +630,9 @@ def _parse_compose_images(path: Path) -> tuple[list[str], bool]:
     return images, gpu_required
 
 
-def _resolve_devcontainer_paths(root: Path, path: Path) -> tuple[list[str], list[str], list[str]]:
+def _resolve_devcontainer_paths(
+    root: Path, path: Path
+) -> tuple[list[str], list[str], list[str]]:
     data = _safe_load_json(path)
     if not isinstance(data, dict):
         return [], [], []
@@ -751,12 +755,15 @@ def _scan_container_environment(root: Path) -> ContainerEnvironmentAssessment:
     assessment.runtime = _probe_container_runtime()
 
     dockerfiles = [
-        path
-        for path in _repo_rglob(root, "*")
-        if DOCKERFILE_NAME_RE.match(path.name)
+        path for path in _repo_rglob(root, "*") if DOCKERFILE_NAME_RE.match(path.name)
     ]
     compose_files = []
-    for pattern in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"):
+    for pattern in (
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        "compose.yml",
+        "compose.yaml",
+    ):
         compose_files.extend(_repo_rglob(root, pattern))
     devcontainer_files = _repo_rglob(root, "devcontainer.json")
 
@@ -798,7 +805,9 @@ def _scan_container_environment(root: Path) -> ContainerEnvironmentAssessment:
 
     dockerfile_rel = sorted({_relative_to_root(root, path) for path in dockerfiles})
     compose_rel = sorted({_relative_to_root(root, path) for path in compose_files})
-    devcontainer_rel = sorted({_relative_to_root(root, path) for path in devcontainer_files})
+    devcontainer_rel = sorted(
+        {_relative_to_root(root, path) for path in devcontainer_files}
+    )
     reference_rel = sorted({_relative_to_root(root, path) for path in reference_files})
 
     for item in resolved_devcontainer_dockerfiles:
@@ -850,13 +859,21 @@ def _scan_container_environment(root: Path) -> ContainerEnvironmentAssessment:
         assessment.setup_evidence.append(f"compose:{assessment.compose_files[0]}")
     elif assessment.devcontainer_files:
         assessment.preferred_strategy = "devcontainer"
-        assessment.setup_evidence.append(f"devcontainer:{assessment.devcontainer_files[0]}")
+        assessment.setup_evidence.append(
+            f"devcontainer:{assessment.devcontainer_files[0]}"
+        )
         if assessment.base_images:
-            assessment.inferred_setup_command = f"docker pull {assessment.base_images[0]}"
+            assessment.inferred_setup_command = (
+                f"docker pull {assessment.base_images[0]}"
+            )
     elif assessment.workflow_images:
         assessment.preferred_strategy = "docker_image"
-        assessment.setup_evidence.append(f"workflow-container:{assessment.workflow_images[0]}")
-        assessment.inferred_setup_command = f"docker pull {assessment.workflow_images[0]}"
+        assessment.setup_evidence.append(
+            f"workflow-container:{assessment.workflow_images[0]}"
+        )
+        assessment.inferred_setup_command = (
+            f"docker pull {assessment.workflow_images[0]}"
+        )
     elif assessment.reference_files:
         assessment.preferred_strategy = "docker_documented"
         assessment.setup_evidence.append(f"docker-doc:{assessment.reference_files[0]}")
@@ -871,17 +888,28 @@ def _scan_container_environment(root: Path) -> ContainerEnvironmentAssessment:
         assessment.setup_blockers.append(
             "repository mentions Docker but does not provide a runnable Dockerfile, compose file, devcontainer, or workflow container image"
         )
-        assessment.note = "docker is documented, but no runnable container definition was found"
+        assessment.note = (
+            "docker is documented, but no runnable container definition was found"
+        )
         return assessment
 
     if not assessment.runtime.cli_available:
         assessment.setup_blockers.append("no local docker/podman CLI available")
-        assessment.note = "container definition exists, but no local container CLI was found"
+        assessment.note = (
+            "container definition exists, but no local container CLI was found"
+        )
         return assessment
 
-    if assessment.runtime.engine == "docker" and not assessment.runtime.daemon_available:
-        assessment.setup_blockers.append("docker CLI exists but daemon is not reachable")
-        assessment.note = "container definition exists, but Docker daemon is not reachable"
+    if (
+        assessment.runtime.engine == "docker"
+        and not assessment.runtime.daemon_available
+    ):
+        assessment.setup_blockers.append(
+            "docker CLI exists but daemon is not reachable"
+        )
+        assessment.note = (
+            "container definition exists, but Docker daemon is not reachable"
+        )
         return assessment
 
     if assessment.requires_gpu and assessment.runtime.engine == "docker":
@@ -889,7 +917,9 @@ def _scan_container_environment(root: Path) -> ContainerEnvironmentAssessment:
             assessment.setup_blockers.append(
                 "repository container images look GPU-oriented, but docker nvidia runtime was not detected"
             )
-            assessment.note = "container definition exists, but GPU runtime support is missing"
+            assessment.note = (
+                "container definition exists, but GPU runtime support is missing"
+            )
             return assessment
         assessment.setup_evidence.append("gpu-capable docker runtime detected")
 
@@ -938,7 +968,9 @@ def _parse_golangci_rule_count(root: Path) -> RuleCountDetail | None:
         path = root / name
         if not path.exists():
             continue
-        data = _safe_load_toml(path) if path.suffix == ".toml" else _safe_load_yaml(path)
+        data = (
+            _safe_load_toml(path) if path.suffix == ".toml" else _safe_load_yaml(path)
+        )
         if not isinstance(data, dict):
             continue
         linters = data.get("linters", {})
@@ -1039,18 +1071,22 @@ def _parse_eslint_rule_count(root: Path) -> RuleCountDetail | None:
 
 
 def _parse_checkstyle_rule_count(root: Path) -> RuleCountDetail | None:
-    for name in ("checkstyle.xml", ".checkstyle.xml", "config/checkstyle/checkstyle.xml"):
+    for name in (
+        "checkstyle.xml",
+        ".checkstyle.xml",
+        "config/checkstyle/checkstyle.xml",
+    ):
         path = root / name
         if not path.exists():
             continue
         try:
             tree = ET.parse(path)
         except Exception:
-            return RuleCountDetail(source=name, count=None, note="checkstyle xml unparsable")
+            return RuleCountDetail(
+                source=name, count=None, note="checkstyle xml unparsable"
+            )
         modules = [
-            elem.attrib.get("name", "")
-            for elem in tree.iter()
-            if elem.tag == "module"
+            elem.attrib.get("name", "") for elem in tree.iter() if elem.tag == "module"
         ]
         count = len([item for item in modules if item not in {"Checker", "TreeWalker"}])
         return RuleCountDetail(
@@ -1272,7 +1308,9 @@ def infer_local_commands(root: Path, result: StaticAnalysisResult) -> None:
             for key in ("lint", "check"):
                 if scripts.get(key) and not result.inferred_code_check_command:
                     result.inferred_code_check_command = f"npm run {key}"
-                    _append_unique(result.inference_evidence, f"package.json:scripts.{key}")
+                    _append_unique(
+                        result.inference_evidence, f"package.json:scripts.{key}"
+                    )
                     break
 
     if (root / "go.mod").exists() and not (
@@ -1292,17 +1330,18 @@ def infer_local_commands(root: Path, result: StaticAnalysisResult) -> None:
     ):
         result.inferred_build_command = "cargo build"
         result.inferred_unit_test_command = "cargo test"
-        result.inferred_code_check_command = "cargo clippy --all-targets --all-features -- -D warnings"
+        result.inferred_code_check_command = (
+            "cargo clippy --all-targets --all-features -- -D warnings"
+        )
         result.inference_evidence.extend(["Cargo.toml", "Rust default commands"])
 
     gradlew = "gradlew.bat" if (root / "gradlew.bat").exists() else "./gradlew"
     if (
-        ((root / "build.gradle").exists() or (root / "build.gradle.kts").exists())
-        and not (
-            result.inferred_build_command
-            or result.inferred_unit_test_command
-            or result.inferred_code_check_command
-        )
+        (root / "build.gradle").exists() or (root / "build.gradle.kts").exists()
+    ) and not (
+        result.inferred_build_command
+        or result.inferred_unit_test_command
+        or result.inferred_code_check_command
     ):
         result.inferred_build_command = f"{gradlew} build -x test"
         result.inferred_unit_test_command = f"{gradlew} test"
@@ -1319,18 +1358,24 @@ def infer_local_commands(root: Path, result: StaticAnalysisResult) -> None:
         result.inferred_code_check_command = "mvn -q verify -DskipTests"
         result.inference_evidence.extend(["pom.xml", "Maven default commands"])
 
-    if ((root / "pytest.ini").exists() or (root / "tests").exists()) and not result.inferred_unit_test_command:
+    if (
+        (root / "pytest.ini").exists() or (root / "tests").exists()
+    ) and not result.inferred_unit_test_command:
         result.inferred_unit_test_command = "pytest -q"
         result.inference_evidence.append("tests/ or pytest.ini detected")
 
-    if (root / ".pre-commit-config.yaml").exists() and not result.inferred_code_check_command:
+    if (
+        root / ".pre-commit-config.yaml"
+    ).exists() and not result.inferred_code_check_command:
         result.inferred_code_check_command = "pre-commit run -a"
         _append_unique(result.inference_evidence, ".pre-commit-config.yaml detected")
     elif (root / "pyproject.toml").exists() and not result.inferred_code_check_command:
         pyproject_text = _safe_read_text(root / "pyproject.toml").lower()
         if "tool.ruff" in pyproject_text:
             result.inferred_code_check_command = "ruff check ."
-            _append_unique(result.inference_evidence, "pyproject.toml:tool.ruff detected")
+            _append_unique(
+                result.inference_evidence, "pyproject.toml:tool.ruff detected"
+            )
 
     documented_build = _select_documented_command(result.documentation, "build")
     documented_test = _select_documented_command(result.documentation, "test")

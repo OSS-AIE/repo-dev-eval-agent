@@ -4,7 +4,11 @@ import subprocess
 from pathlib import Path
 
 from oss_issue_fixer.repo_eval_agent import RepoEvalAgent, _normalize_host_command
-from oss_issue_fixer.repo_eval_models import LocalEvalConfig, RepoEvalAppConfig, RepoEvalPolicy
+from oss_issue_fixer.repo_eval_models import (
+    LocalEvalConfig,
+    RepoEvalAppConfig,
+    RepoEvalPolicy,
+)
 
 
 def test_collect_pr_metrics_uses_git_remote_to_detect_gitcode(tmp_path: Path):
@@ -173,7 +177,9 @@ def test_collect_github_pr_metrics_filters_by_window_and_counts_average(
 
 
 def test_normalize_host_command_translates_unix_env_prefix():
-    command = "VLLM_USE_PRECOMPILED=1 UV_INDEX=https://example.invalid uv pip install -e ."
+    command = (
+        "VLLM_USE_PRECOMPILED=1 UV_INDEX=https://example.invalid uv pip install -e ."
+    )
     normalized = _normalize_host_command(command)
 
     assert "$env:VLLM_USE_PRECOMPILED='1'" in normalized

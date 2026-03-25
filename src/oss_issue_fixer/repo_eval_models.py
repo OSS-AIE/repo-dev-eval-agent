@@ -26,9 +26,7 @@ class LocalEvalConfig:
 @dataclass
 class RemoteEvalConfig:
     workflow_events: list[str] = field(default_factory=lambda: ["pull_request"])
-    runner_capacity_overrides: dict[str, RunnerCapacity] = field(
-        default_factory=dict
-    )
+    runner_capacity_overrides: dict[str, RunnerCapacity] = field(default_factory=dict)
     pr_window_days: int = 30
     github_token_env: str = "GITHUB_TOKEN"
     gitcode_token_env: str = "GITCODE_TOKEN"

@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-toml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.5
+    hooks:
+      - id: ruff
+        files: >-
+          ^(src/oss_issue_fixer/(cli|repo_eval_[^/]+)\.py|tests/test_repo_eval.*\.py|tools/ai_pr_review\.py)$
+      - id: ruff-format
+        files: >-
+          ^(src/oss_issue_fixer/(cli|repo_eval_[^/]+)\.py|tests/test_repo_eval.*\.py|tools/ai_pr_review\.py)$

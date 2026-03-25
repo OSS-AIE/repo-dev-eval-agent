@@ -3,7 +3,11 @@ from __future__ import annotations
 from collections import Counter
 from html import escape
 
-from .repo_eval_models import CommandExecutionResult, DocumentationIssue, RepoEvaluationResult
+from .repo_eval_models import (
+    CommandExecutionResult,
+    DocumentationIssue,
+    RepoEvaluationResult,
+)
 
 
 def _bool_text(value: bool) -> str:
@@ -168,11 +172,21 @@ def render_repo_eval_markdown(results: list[RepoEvaluationResult]) -> str:
             f"- Markdown 相关文件: {_join(item.static.documentation.relevant_files, separator='；')}"
         )
         lines.append(f"- 编码风格是否定义: {_bool_text(item.static.style_defined)}")
-        lines.append(f"- 编码风格证据: {_join(item.static.style_evidence, separator='；')}")
-        lines.append(f"- 代码检测是否支持: {_bool_text(item.static.code_check_supported)}")
-        lines.append(f"- 代码检测证据: {_join(item.static.check_tools, separator='；')}")
-        lines.append(f"- 自动修复是否具备: {_bool_text(item.static.auto_fix_supported)}")
-        lines.append(f"- 自动修复证据: {_join(item.static.auto_fix_evidence, separator='；')}")
+        lines.append(
+            f"- 编码风格证据: {_join(item.static.style_evidence, separator='；')}"
+        )
+        lines.append(
+            f"- 代码检测是否支持: {_bool_text(item.static.code_check_supported)}"
+        )
+        lines.append(
+            f"- 代码检测证据: {_join(item.static.check_tools, separator='；')}"
+        )
+        lines.append(
+            f"- 自动修复是否具备: {_bool_text(item.static.auto_fix_supported)}"
+        )
+        lines.append(
+            f"- 自动修复证据: {_join(item.static.auto_fix_evidence, separator='；')}"
+        )
         lines.append(
             f"- 容器环境: {_bool_text(item.static.container_environment.defined)} / {_bool_text(item.static.container_environment.setup_supported_locally)} / `{item.static.container_environment.preferred_strategy}`"
         )
@@ -196,9 +210,7 @@ def render_repo_eval_markdown(results: list[RepoEvaluationResult]) -> str:
             f"{detail.source}: {detail.count if detail.count is not None else 'N/A'} ({detail.note})"
             for detail in item.static.rule_count_details
         ]
-        lines.append(
-            f"- 规则统计明细: {_join(rule_details, separator='；')}"
-        )
+        lines.append(f"- 规则统计明细: {_join(rule_details, separator='；')}")
         lines.append(
             f"- 文档中的安装命令: {_join(_doc_commands(item, 'install'), separator='；')}"
         )
@@ -254,9 +266,7 @@ def render_repo_eval_markdown(results: list[RepoEvaluationResult]) -> str:
         lines.append(
             f"- AI 代码检视证据: {_join(item.pr_metrics.ai_review_evidence, separator='；')}"
         )
-        lines.append(
-            f"- PR 采集说明: {item.pr_metrics.collection_note or 'N/A'}"
-        )
+        lines.append(f"- PR 采集说明: {item.pr_metrics.collection_note or 'N/A'}")
         if item.pr_metrics.workflow_run_evidence:
             lines.append(
                 f"- PR Run 证据: {_join(item.pr_metrics.workflow_run_evidence, separator='；')}"
@@ -333,29 +343,34 @@ def _render_html_summary_table(results: list[RepoEvaluationResult]) -> str:
 
 def _render_html_list(title: str, values: list[str]) -> str:
     if not values:
-        return f"<div class=\"kv\"><div class=\"k\">{escape(title)}</div><div class=\"v\">N/A</div></div>"
+        return f'<div class="kv"><div class="k">{escape(title)}</div><div class="v">N/A</div></div>'
     items = "".join(f"<li>{escape(value)}</li>" for value in values)
     return (
-        f"<div class=\"kv\"><div class=\"k\">{escape(title)}</div>"
-        f"<div class=\"v\"><ul>{items}</ul></div></div>"
+        f'<div class="kv"><div class="k">{escape(title)}</div>'
+        f'<div class="v"><ul>{items}</ul></div></div>'
     )
 
 
 def _render_html_repo_panel(item: RepoEvaluationResult, index: int) -> str:
     issue_items = (
-        "".join(f"<li>{escape(_issue_text(issue))}</li>" for issue in item.documentation_issues)
+        "".join(
+            f"<li>{escape(_issue_text(issue))}</li>"
+            for issue in item.documentation_issues
+        )
         if item.documentation_issues
         else "<li>N/A</li>"
     )
     error_items = (
-        "".join(f"<li>{escape(value)}</li>" for value in item.errors) if item.errors else "<li>N/A</li>"
+        "".join(f"<li>{escape(value)}</li>" for value in item.errors)
+        if item.errors
+        else "<li>N/A</li>"
     )
     rule_items = [
         f"{detail.source}: {detail.count if detail.count is not None else 'N/A'} ({detail.note})"
         for detail in item.static.rule_count_details
     ]
     return f"""
-<section class="repo-panel {'active' if index == 0 else ''}" id="repo-panel-{index}">
+<section class="repo-panel {"active" if index == 0 else ""}" id="repo-panel-{index}">
   <div class="panel-grid">
     <div class="card">
       <h3>概览</h3>
@@ -366,16 +381,16 @@ def _render_html_repo_panel(item: RepoEvaluationResult, index: int) -> str:
       <div class="kv"><div class="k">代码检测是否支持</div><div class="v">{escape(_bool_text(item.static.code_check_supported))}</div></div>
       <div class="kv"><div class="k">自动修复是否具备</div><div class="v">{escape(_bool_text(item.static.auto_fix_supported))}</div></div>
       <div class="kv"><div class="k">容器环境</div><div class="v">{escape(_bool_text(item.static.container_environment.defined))} / {escape(_bool_text(item.static.container_environment.setup_supported_locally))} / <code>{escape(item.static.container_environment.preferred_strategy)}</code></div></div>
-      <div class="kv"><div class="k">规则数量估算</div><div class="v">{escape(str(item.static.rule_count_estimate or 'N/A'))}</div></div>
+      <div class="kv"><div class="k">规则数量估算</div><div class="v">{escape(str(item.static.rule_count_estimate or "N/A"))}</div></div>
     </div>
     <div class="card">
       <h3>本地探测结果</h3>
-      <div class="kv"><div class="k">增量构建</div><div class="v">{_status_badge(item.incremental_build)} <code>{escape(item.incremental_build.command or 'N/A')}</code> ({escape(_duration_text(item.incremental_build.duration_sec))})</div></div>
-      <div class="kv"><div class="k">代码检测</div><div class="v">{_status_badge(item.code_check)} <code>{escape(item.code_check.command or 'N/A')}</code> ({escape(_duration_text(item.code_check.duration_sec))})</div></div>
-      <div class="kv"><div class="k">UT</div><div class="v">{_status_badge(item.unit_test)} <code>{escape(item.unit_test.command or 'N/A')}</code> ({escape(_duration_text(item.unit_test.duration_sec))})</div></div>
-      <div class="kv"><div class="k">构建失败摘要</div><div class="v">{escape(_command_failure_text(item.incremental_build) or 'N/A')}</div></div>
-      <div class="kv"><div class="k">代码检测失败摘要</div><div class="v">{escape(_command_failure_text(item.code_check) or 'N/A')}</div></div>
-      <div class="kv"><div class="k">UT 失败摘要</div><div class="v">{escape(_command_failure_text(item.unit_test) or 'N/A')}</div></div>
+      <div class="kv"><div class="k">增量构建</div><div class="v">{_status_badge(item.incremental_build)} <code>{escape(item.incremental_build.command or "N/A")}</code> ({escape(_duration_text(item.incremental_build.duration_sec))})</div></div>
+      <div class="kv"><div class="k">代码检测</div><div class="v">{_status_badge(item.code_check)} <code>{escape(item.code_check.command or "N/A")}</code> ({escape(_duration_text(item.code_check.duration_sec))})</div></div>
+      <div class="kv"><div class="k">UT</div><div class="v">{_status_badge(item.unit_test)} <code>{escape(item.unit_test.command or "N/A")}</code> ({escape(_duration_text(item.unit_test.duration_sec))})</div></div>
+      <div class="kv"><div class="k">构建失败摘要</div><div class="v">{escape(_command_failure_text(item.incremental_build) or "N/A")}</div></div>
+      <div class="kv"><div class="k">代码检测失败摘要</div><div class="v">{escape(_command_failure_text(item.code_check) or "N/A")}</div></div>
+      <div class="kv"><div class="k">UT 失败摘要</div><div class="v">{escape(_command_failure_text(item.unit_test) or "N/A")}</div></div>
     </div>
     <div class="card">
       <h3>PR 流水线</h3>
@@ -385,18 +400,18 @@ def _render_html_repo_panel(item: RepoEvaluationResult, index: int) -> str:
       <div class="kv"><div class="k">PR 中位时长</div><div class="v">{escape(_duration_text(item.pr_metrics.median_duration_sec))}</div></div>
       <div class="kv"><div class="k">最近一次 PR 时长</div><div class="v">{escape(_duration_text(item.pr_metrics.latest_duration_sec))}</div></div>
       <div class="kv"><div class="k">资源消耗</div><div class="v">{escape(_resource_text(item))}</div></div>
-      <div class="kv"><div class="k">PR 采集说明</div><div class="v">{escape(item.pr_metrics.collection_note or 'N/A')}</div></div>
+      <div class="kv"><div class="k">PR 采集说明</div><div class="v">{escape(item.pr_metrics.collection_note or "N/A")}</div></div>
     </div>
   </div>
   <div class="panel-grid">
     <div class="card">
       <h3>文档与命令</h3>
       {_render_html_list("Markdown 相关文件", item.static.documentation.relevant_files)}
-      {_render_html_list("文档中的安装命令", _doc_commands(item, 'install'))}
-      {_render_html_list("文档中的构建命令", _doc_commands(item, 'build'))}
-      {_render_html_list("文档中的测试命令", _doc_commands(item, 'test'))}
-      {_render_html_list("文档中的代码检测命令", _doc_commands(item, 'check'))}
-      {_render_html_list("文档中的容器命令", _doc_commands(item, 'container'))}
+      {_render_html_list("文档中的安装命令", _doc_commands(item, "install"))}
+      {_render_html_list("文档中的构建命令", _doc_commands(item, "build"))}
+      {_render_html_list("文档中的测试命令", _doc_commands(item, "test"))}
+      {_render_html_list("文档中的代码检测命令", _doc_commands(item, "check"))}
+      {_render_html_list("文档中的容器命令", _doc_commands(item, "container"))}
       {_render_html_list("文档扫描备注", item.static.documentation.notes)}
       {_render_html_list("命令推断依据", item.static.inference_evidence)}
     </div>
@@ -417,7 +432,7 @@ def _render_html_repo_panel(item: RepoEvaluationResult, index: int) -> str:
       <ul>{issue_items}</ul>
       <h3>错误</h3>
       <ul>{error_items}</ul>
-      <div class="kv"><div class="k">AI 总结</div><div class="v">{escape(item.ai_summary.summary or item.ai_summary.stderr_excerpt or 'N/A')}</div></div>
+      <div class="kv"><div class="k">AI 总结</div><div class="v">{escape(item.ai_summary.summary or item.ai_summary.stderr_excerpt or "N/A")}</div></div>
     </div>
   </div>
 </section>
@@ -438,13 +453,15 @@ def render_repo_eval_html(results: list[RepoEvaluationResult]) -> str:
             for category, count in issue_counter.most_common()
         )
         if issue_counter
-        else "<tr><td colspan=\"2\">当前没有识别出 Markdown 与实际执行之间的明显偏差。</td></tr>"
+        else '<tr><td colspan="2">当前没有识别出 Markdown 与实际执行之间的明显偏差。</td></tr>'
     )
     tab_buttons = "".join(
         f'<button class="repo-tab {"active" if index == 0 else ""}" onclick="showRepoTab({index})">{escape(item.repo)}</button>'
         for index, item in enumerate(results)
     )
-    panels = "".join(_render_html_repo_panel(item, index) for index, item in enumerate(results))
+    panels = "".join(
+        _render_html_repo_panel(item, index) for index, item in enumerate(results)
+    )
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

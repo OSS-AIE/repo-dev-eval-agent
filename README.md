@@ -173,3 +173,23 @@ python -m oss_issue_fixer.cli run-local-smoke --config config/repos.yaml --repo 
 - GitHub PR metrics are more stable with an authenticated `GITHUB_TOKEN`
 - GitCode PR bot-comment collection requires `GITCODE_TOKEN`
 - Linux-first repositories usually work better with `--local-runner wsl`
+
+## GitHub Actions Baseline
+
+This repository now includes:
+
+- `.github/workflows/ci.yml`
+  - build package artifacts
+  - run `pytest`
+  - run `pre-commit`
+  - run `actionlint`
+- `.github/workflows/ai-pr-review.yml`
+  - optional AI-assisted PR review comment
+  - safe by default: uses `pull_request_target` but only reads PR metadata/diff through GitHub API
+  - requires `OPENAI_API_KEY`
+
+Recommended repository configuration:
+
+- Actions secret: `OPENAI_API_KEY`
+- Optional Actions secret: `OPENAI_BASE_URL`
+- Optional Actions variable: `OPENAI_REVIEW_MODEL`

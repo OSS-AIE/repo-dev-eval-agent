@@ -32,7 +32,10 @@ def _sample_result() -> RepoEvaluationResult:
             inferred_build_command="bash build/build.sh",
             inferred_unit_test_command="bash tests/run_test.sh",
             inferred_code_check_command="pre-commit run -a",
-            inference_evidence=["build/build.sh detected", "remote docs: origin/master"],
+            inference_evidence=[
+                "build/build.sh detected",
+                "remote docs: origin/master",
+            ],
             container_environment=ContainerEnvironmentAssessment(
                 defined=True,
                 runnable_definition_present=False,
@@ -129,7 +132,7 @@ def test_render_repo_eval_markdown_includes_failure_excerpts_and_doc_issues():
 def test_render_repo_eval_html_contains_summary_and_tabs():
     html = render_repo_eval_html([_sample_result(), _sample_result()])
 
-    assert "<html lang=\"zh-CN\">" in html
+    assert '<html lang="zh-CN">' in html
     assert "开源代码仓开发体验评估报告" in html
     assert "仓库汇总" in html
     assert "repo-tab active" in html

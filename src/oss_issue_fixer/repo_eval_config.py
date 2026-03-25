@@ -44,9 +44,7 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                     code_check_command=local_raw.get("code_check_command", ""),
                     runner=local_raw.get("runner", "host"),
                     wsl_distro=local_raw.get("wsl_distro", ""),
-                    refresh_local_repo=bool(
-                        local_raw.get("refresh_local_repo", True)
-                    ),
+                    refresh_local_repo=bool(local_raw.get("refresh_local_repo", True)),
                     documentation_refs=list(
                         local_raw.get("documentation_refs", []) or []
                     ),
@@ -62,9 +60,7 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                     ),
                     runner_capacity_overrides=overrides,
                     pr_window_days=int(github_raw.get("pr_window_days", 30)),
-                    github_token_env=github_raw.get(
-                        "github_token_env", "GITHUB_TOKEN"
-                    ),
+                    github_token_env=github_raw.get("github_token_env", "GITHUB_TOKEN"),
                     gitcode_token_env=github_raw.get(
                         "gitcode_token_env", "GITCODE_TOKEN"
                     ),

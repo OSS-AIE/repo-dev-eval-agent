@@ -71,12 +71,19 @@ def _classify_command_failure(
     if documented:
         evidence.append(
             "documented commands: "
-            + "; ".join(f"{item.source_file}: {item.command}" for item in documented[:3])
+            + "; ".join(
+                f"{item.source_file}: {item.command}" for item in documented[:3]
+            )
         )
 
     if any(
         token in text
-        for token in ("ssl:", "couldn't connect", "connection timed out", "unexpected eof")
+        for token in (
+            "ssl:",
+            "couldn't connect",
+            "connection timed out",
+            "unexpected eof",
+        )
     ):
         _append_issue(
             issues,
@@ -157,7 +164,14 @@ def _classify_command_failure(
         )
         return
 
-    if any(token in text for token in ("$'\\r'", "unexpected end of file", "syntax error near unexpected token")):
+    if any(
+        token in text
+        for token in (
+            "$'\\r'",
+            "unexpected end of file",
+            "syntax error near unexpected token",
+        )
+    ):
         _append_issue(
             issues,
             category="repository_script_issue",
@@ -215,7 +229,9 @@ def analyze_documentation_quality(
             root_cause="documentation",
             severity="medium",
             summary="仓库具备构建路径，但 Markdown 没有给出可直接执行的构建命令",
-            evidence=[f"inferred build command: {result.static.inferred_build_command}"],
+            evidence=[
+                f"inferred build command: {result.static.inferred_build_command}"
+            ],
             recommendation=(
                 "在开发者文档中补充最小可运行的本地构建命令，并注明工作目录与前置依赖。"
             ),
@@ -228,7 +244,9 @@ def analyze_documentation_quality(
             root_cause="documentation",
             severity="medium",
             summary="仓库具备测试路径，但 Markdown 没有给出可直接执行的测试命令",
-            evidence=[f"inferred test command: {result.static.inferred_unit_test_command}"],
+            evidence=[
+                f"inferred test command: {result.static.inferred_unit_test_command}"
+            ],
             recommendation=(
                 "在贡献或开发文档中补充最小 UT 命令，并写明首次执行前需要安装的依赖集合。"
             ),
@@ -272,7 +290,9 @@ def analyze_documentation_quality(
             root_cause="documentation",
             severity="medium",
             summary="容器准备依赖外部站点登录或手动下载，难以自动化复现",
-            evidence=[f"{item.source_file}: {item.command}" for item in container_docs[:3]],
+            evidence=[
+                f"{item.source_file}: {item.command}" for item in container_docs[:3]
+            ],
             recommendation=(
                 "增加公开可访问的镜像拉取方式，或明确写清下载入口、鉴权方式和离线导入步骤。"
             ),

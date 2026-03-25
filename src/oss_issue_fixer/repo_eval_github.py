@@ -73,8 +73,6 @@ class RepoEvalGitHubClient:
         data = self._get(f"/repos/{repo}/pulls/{pull_number}/reviews")
         return list(data or []) if isinstance(data, list) else []
 
-    def list_issue_comments(
-        self, repo: str, pull_number: int
-    ) -> list[dict[str, Any]]:
+    def list_issue_comments(self, repo: str, pull_number: int) -> list[dict[str, Any]]:
         data = self._get(f"/repos/{repo}/issues/{pull_number}/comments")
         return list(data or []) if isinstance(data, list) else []

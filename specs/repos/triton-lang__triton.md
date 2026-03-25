@@ -193,7 +193,7 @@ See [`python/triton/knobs.py`](python/triton/knobs.py) for the full list of conf
 - `TRITON_REPRODUCER_PATH=<reproducer_path>` will generate an MLIR reproducer file
   at `<reproducer_path>` before each MLIR compiler stage. If any of the stages fail,
   `<reproducer_path>` will be a local MLIR reproducer captured right before the failing pass.
-- `TRITON_INTERPRET=1` uses the Triton interpreter instead of 
+- `TRITON_INTERPRET=1` uses the Triton interpreter instead of
 ```
 
 ## CONTRIBUTING Excerpt

@@ -74,7 +74,9 @@ def test_load_repo_inputs_merges_cli_and_xlsx_inputs(tmp_path: Path):
     sheet = workbook.active
     sheet.title = "repos"
     sheet.append(["组织名", "项目名", "仓库名", "仓库链接"])
-    sheet.append(["Ascend", "MindIE", "MindIE-SD", "https://gitcode.com/Ascend/MindIE-SD.git"])
+    sheet.append(
+        ["Ascend", "MindIE", "MindIE-SD", "https://gitcode.com/Ascend/MindIE-SD.git"]
+    )
     sheet.append(["vLLM", "vLLM", "vllm", "https://github.com/vllm-project/vllm.git"])
     xlsx_path = tmp_path / "repos.xlsx"
     workbook.save(xlsx_path)

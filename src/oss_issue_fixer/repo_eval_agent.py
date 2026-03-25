@@ -1,19 +1,19 @@
 from __future__ import annotations
 
+import re
+import shlex
 import statistics
 import subprocess
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-import re
-import shlex
 
 from .git_ops import ensure_repo
 from .repo_eval_ai import summarize_with_ai
 from .repo_eval_docs import analyze_documentation_quality
-from .repo_eval_github import RepoEvalGitHubClient
 from .repo_eval_gitcode import RepoEvalGitCodeClient
+from .repo_eval_github import RepoEvalGitHubClient
 from .repo_eval_models import (
     CommandExecutionResult,
     LocalEvalConfig,
@@ -24,7 +24,6 @@ from .repo_eval_models import (
     RunnerCapacity,
 )
 from .repo_eval_scan import infer_local_commands, scan_repository
-
 
 DEFAULT_AI_REVIEW_MARKERS = (
     "copilot",
@@ -105,7 +104,9 @@ def _git_remote_origin(repo_path: Path) -> str:
     return (proc.stdout or "").strip()
 
 
-def _git_run(repo_path: Path, args: list[str], timeout: int = 60) -> tuple[int, str, str]:
+def _git_run(
+    repo_path: Path, args: list[str], timeout: int = 60
+) -> tuple[int, str, str]:
     proc = subprocess.run(
         ["git", *args],
         cwd=str(repo_path),
@@ -275,7 +276,9 @@ class RepoEvalAgent:
         build_command = repo.local.incremental_build_command or repo.local.build_command
         if not build_command:
             build_command = static.inferred_build_command
-        unit_test_command = repo.local.unit_test_command or static.inferred_unit_test_command
+        unit_test_command = (
+            repo.local.unit_test_command or static.inferred_unit_test_command
+        )
         code_check_command = (
             repo.local.code_check_command or static.inferred_code_check_command
         )
@@ -386,7 +389,9 @@ class RepoEvalAgent:
         def build_subprocess_args() -> dict[str, Any]:
             if runner == "wsl":
                 wsl_path = _windows_to_wsl_path(repo_path)
-                bash_script = f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {command}"
+                bash_script = (
+                    f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {command}"
+                )
                 args = ["wsl.exe"]
                 if local_cfg.wsl_distro:
                     args.extend(["-d", local_cfg.wsl_distro])
@@ -559,7 +564,9 @@ class RepoEvalAgent:
             workflow_run_count=run_count,
             latest_duration_sec=durations[0] if durations else None,
             median_duration_sec=statistics.median(durations) if durations else None,
-            average_duration_sec=(sum(durations) / len(durations)) if durations else None,
+            average_duration_sec=(sum(durations) / len(durations))
+            if durations
+            else None,
             estimated_cpu_core_minutes=cpu_core_minutes if cpu_core_minutes else None,
             estimated_npu_card_minutes=npu_card_minutes if npu_card_minutes else None,
             ai_review_supported=bool(ai_review_evidence),

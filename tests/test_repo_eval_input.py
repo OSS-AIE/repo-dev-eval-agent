@@ -12,7 +12,9 @@ def test_load_repos_from_xlsx_reads_repo_url_column(tmp_path: Path):
     sheet = workbook.active
     sheet.title = "sheet1"
     sheet.append(["组织名", "项目名", "仓库名", "仓库链接"])
-    sheet.append(["Ascend", "MindIE", "MindIE-SD", "https://gitcode.com/Ascend/MindIE-SD.git"])
+    sheet.append(
+        ["Ascend", "MindIE", "MindIE-SD", "https://gitcode.com/Ascend/MindIE-SD.git"]
+    )
     sheet.append(["vLLM", "vLLM", "vllm", "https://github.com/vllm-project/vllm.git"])
     sheet.append(["vLLM", "vLLM", "vllm", "https://github.com/vllm-project/vllm.git"])
     xlsx_path = tmp_path / "repos.xlsx"

@@ -16,9 +16,9 @@ from .repo_eval_input import load_repos_from_xlsx
 from .repo_eval_models import (
     AIEvalConfig,
     LocalEvalConfig,
+    RemoteEvalConfig,
     RepoEvalAppConfig,
     RepoEvalPolicy,
-    RemoteEvalConfig,
 )
 from .repo_eval_report import render_repo_eval_html, render_repo_eval_markdown
 from .scheduler import run_daily
@@ -188,7 +188,9 @@ def _load_repo_inputs(
     values = list(repo_args or [])
     if repo_xlsx:
         values.extend(load_repos_from_xlsx(repo_xlsx, repo_sheet))
-    deduped = _dedupe_keep_order([item.strip() for item in values if item and item.strip()])
+    deduped = _dedupe_keep_order(
+        [item.strip() for item in values if item and item.strip()]
+    )
     if repo_offset > 0:
         deduped = deduped[repo_offset:]
     if repo_limit > 0:
@@ -281,7 +283,8 @@ def main() -> None:
             enable_local_commands_override=(
                 True
                 if args.enable_local_commands
-                else False if args.disable_local_commands
+                else False
+                if args.disable_local_commands
                 else None
             ),
             disable_ai=args.no_ai,

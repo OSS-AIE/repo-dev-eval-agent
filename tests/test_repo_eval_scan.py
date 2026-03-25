@@ -303,7 +303,9 @@ def test_scan_repository_ignores_directories_named_dockerfile(
     )
     docker_dir = tmp_path / "docs" / "contributing" / "Dockerfile"
     docker_dir.mkdir(parents=True)
-    (docker_dir / "dockerfile.md").write_text("not a docker build file\n", encoding="utf-8")
+    (docker_dir / "dockerfile.md").write_text(
+        "not a docker build file\n", encoding="utf-8"
+    )
 
     result = scan_repository(tmp_path)
 
