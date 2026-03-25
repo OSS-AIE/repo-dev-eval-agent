@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from oss_issue_fixer.repo_eval_agent import RepoEvalAgent, _normalize_host_command
@@ -56,7 +57,8 @@ def test_collect_gitcode_pr_metrics_detects_robot_comments(monkeypatch, tmp_path
             self.token_env = token_env
 
         def list_recent_pulls(self, repo: str, per_page: int):
-            return [{"number": 215, "updated_at": "2026-03-20T08:00:00Z"}]
+            recent = datetime.now(timezone.utc) - timedelta(days=2)
+            return [{"number": 215, "updated_at": recent.isoformat()}]
 
         def list_pull_comments(self, repo: str, pull_number: int):
             return [
@@ -110,38 +112,42 @@ def test_collect_github_pr_metrics_filters_by_window_and_counts_average(
             self.token_env = token_env
 
         def list_workflow_runs(self, repo: str, event: str, per_page: int):
+            recent = datetime.now(timezone.utc) - timedelta(days=2)
+            old = datetime.now(timezone.utc) - timedelta(days=60)
             return [
                 {
                     "id": 100,
                     "name": "PR",
                     "event": "pull_request",
-                    "run_started_at": "2026-03-22T10:00:00Z",
-                    "updated_at": "2026-03-22T10:10:00Z",
-                    "created_at": "2026-03-22T10:00:00Z",
+                    "run_started_at": recent.isoformat(),
+                    "updated_at": (recent + timedelta(minutes=10)).isoformat(),
+                    "created_at": recent.isoformat(),
                 },
                 {
                     "id": 101,
                     "name": "PR",
                     "event": "pull_request",
-                    "run_started_at": "2026-02-01T10:00:00Z",
-                    "updated_at": "2026-02-01T10:40:00Z",
-                    "created_at": "2026-02-01T10:00:00Z",
+                    "run_started_at": old.isoformat(),
+                    "updated_at": (old + timedelta(minutes=40)).isoformat(),
+                    "created_at": old.isoformat(),
                 },
             ]
 
         def list_workflow_jobs(self, repo: str, run_id: int, per_page: int = 100):
             if run_id != 100:
                 return []
+            recent = datetime.now(timezone.utc) - timedelta(days=2)
             return [
                 {
                     "labels": ["ubuntu-latest"],
-                    "started_at": "2026-03-22T10:00:00Z",
-                    "completed_at": "2026-03-22T10:10:00Z",
+                    "started_at": recent.isoformat(),
+                    "completed_at": (recent + timedelta(minutes=10)).isoformat(),
                 }
             ]
 
         def list_recent_pulls(self, repo: str, per_page: int):
-            return [{"number": 12, "updated_at": "2026-03-22T11:00:00Z"}]
+            recent = datetime.now(timezone.utc) - timedelta(days=2)
+            return [{"number": 12, "updated_at": recent.isoformat()}]
 
         def list_reviews(self, repo: str, pull_number: int):
             return [{"user": {"login": "coderabbitai[bot]"}, "body": "nit"}]

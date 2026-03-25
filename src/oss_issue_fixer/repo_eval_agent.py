@@ -5,7 +5,7 @@ import shlex
 import statistics
 import subprocess
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +65,7 @@ def _parse_ts(value: str | None) -> datetime | None:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
 def _duration_seconds(start: str | None, end: str | None) -> float | None:
@@ -175,7 +175,7 @@ def _git_remote_default_ref(repo_path: Path) -> str:
 
 
 def _window_start(days: int) -> datetime:
-    return datetime.now(UTC) - timedelta(days=max(0, days))
+    return datetime.now(timezone.utc) - timedelta(days=max(0, days))
 
 
 def _in_window(value: str | None, days: int) -> bool:
@@ -603,7 +603,7 @@ class RepoEvalAgent:
             errors.append(review_error)
             collection_notes.append("GitHub PR review/comment 数据采集失败。")
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         if run_count == 0 and workflow_error is None:
             collection_notes.append(
                 f"最近 {window_days} 天内没有可用的 GitHub Actions workflow 样本。"
@@ -645,7 +645,7 @@ class RepoEvalAgent:
     ) -> PullRequestMetrics:
         client = RepoEvalGitCodeClient(token_env=repo.github.gitcode_token_env)
         window_days = repo.github.pr_window_days
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         if not client.token:
             return PullRequestMetrics(
                 remote_platform="gitcode",
