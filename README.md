@@ -183,13 +183,28 @@ This repository now includes:
   - run `pytest`
   - run `pre-commit`
   - run `actionlint`
-- `.github/workflows/ai-pr-review.yml`
-  - optional AI-assisted PR review comment
+- `.github/workflows/codex-pr-review.yml`
+  - Codex / OpenAI-based PR review comment
   - safe by default: uses `pull_request_target` but only reads PR metadata/diff through GitHub API
   - requires `OPENAI_API_KEY`
+- `.github/workflows/gemini-pr-review.yml`
+  - Gemini-based PR review comment
+  - same safe execution model as Codex review
+  - requires `GEMINI_API_KEY` or `GOOGLE_API_KEY`
 
 Recommended repository configuration:
 
 - Actions secret: `OPENAI_API_KEY`
 - Optional Actions secret: `OPENAI_BASE_URL`
 - Optional Actions variable: `OPENAI_REVIEW_MODEL`
+- Actions secret: `GEMINI_API_KEY` or `GOOGLE_API_KEY`
+- Optional Actions secret: `GEMINI_BASE_URL`
+- Optional Actions variable: `GEMINI_REVIEW_MODEL`
+
+Behavior notes:
+
+- Codex and Gemini each publish their own sticky PR comment and update it on re-run
+- comment markers are separated, so two providers can run in parallel without overwriting each other
+- default models:
+  - OpenAI: `gpt-5-mini`
+  - Gemini: `gemini-2.5-flash`

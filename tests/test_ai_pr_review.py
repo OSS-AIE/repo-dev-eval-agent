@@ -18,14 +18,14 @@ def _load_module():
     return module
 
 
-def test_extract_output_text_prefers_top_level_field():
+def test_extract_openai_output_text_prefers_top_level_field():
     module = _load_module()
     payload = {"output_text": "review summary"}
 
-    assert module._extract_output_text(payload) == "review summary"
+    assert module._extract_openai_output_text(payload) == "review summary"
 
 
-def test_extract_output_text_falls_back_to_output_items():
+def test_extract_openai_output_text_falls_back_to_output_items():
     module = _load_module()
     payload = {
         "output": [
@@ -38,4 +38,68 @@ def test_extract_output_text_falls_back_to_output_items():
         ]
     }
 
-    assert module._extract_output_text(payload) == "line 1\nline 2"
+    assert module._extract_openai_output_text(payload) == "line 1\nline 2"
+
+
+def test_extract_gemini_output_text_reads_candidate_parts():
+    module = _load_module()
+    payload = {
+        "candidates": [
+            {"content": {"parts": [{"text": "line 1"}, {"text": "line 2"}]}}
+        ]
+    }
+
+    assert module._extract_gemini_output_text(payload) == "line 1\nline 2"
+
+
+def test_required_api_key_uses_gemini_fallback(monkeypatch):
+    module = _load_module()
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("GOOGLE_API_KEY", "google-key")
+
+    assert module._required_api_key("gemini") == "google-key"
+
+
+def test_comment_marker_and_heading_are_configurable(monkeypatch):
+    module = _load_module()
+    monkeypatch.setenv("AI_REVIEW_MARKER", "<!-- marker -->")
+    monkeypatch.setenv("AI_REVIEW_HEADING", "Gemini review")
+
+    assert module._comment_marker() == "<!-- marker -->"
+    assert module._comment_heading() == "Gemini review"
+
+
+def test_request_ai_review_routes_to_provider(monkeypatch):
+    module = _load_module()
+    context = module.GitHubContext(
+        repo="OSS-AIE/repo-dev-eval-agent",
+        pr_number=1,
+        api_url="https://api.github.com",
+        server_url="https://github.com",
+        token="token",
+    )
+    snapshot = {"pr": {}, "files": [], "diff": ""}
+    monkeypatch.setenv("AI_REVIEW_PROVIDER", "gemini")
+    monkeypatch.setenv("GOOGLE_API_KEY", "google-key")
+
+    def fake_gemini_review(_snapshot, _context):
+        assert _snapshot is snapshot
+        assert _context is context
+        return "gemini review"
+
+    monkeypatch.setattr(module, "_request_gemini_review", fake_gemini_review)
+
+    assert module._request_ai_review(snapshot, context) == "gemini review"
+
+
+def test_main_skips_when_provider_key_missing(monkeypatch, capsys):
+    module = _load_module()
+    monkeypatch.setenv("AI_REVIEW_PROVIDER", "gemini")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "OSS-AIE/repo-dev-eval-agent")
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.setenv("PR_NUMBER", "12")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+
+    assert module.main() == 0
+    assert "gemini API key is not configured" in capsys.readouterr().out

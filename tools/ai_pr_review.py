@@ -8,7 +8,8 @@ from typing import Any
 
 import requests
 
-COMMENT_MARKER = "<!-- oss-aie-ai-review -->"
+DEFAULT_COMMENT_MARKER = "<!-- oss-aie-ai-review -->"
+DEFAULT_COMMENT_HEADING = "AI 辅助代码检视"
 MAX_DIFF_CHARS = 120_000
 MAX_FILES = 80
 
@@ -99,7 +100,27 @@ def _openai_headers(api_key: str) -> dict[str, str]:
     }
 
 
-def _extract_output_text(payload: dict[str, Any]) -> str:
+def _provider() -> str:
+    return _env("AI_REVIEW_PROVIDER", "openai").lower()
+
+
+def _comment_marker() -> str:
+    return _env("AI_REVIEW_MARKER", DEFAULT_COMMENT_MARKER)
+
+
+def _comment_heading() -> str:
+    return _env("AI_REVIEW_HEADING", DEFAULT_COMMENT_HEADING)
+
+
+def _required_api_key(provider: str) -> str:
+    if provider == "openai":
+        return _env("OPENAI_API_KEY")
+    if provider == "gemini":
+        return _env("GEMINI_API_KEY") or _env("GOOGLE_API_KEY")
+    raise RuntimeError(f"unsupported AI review provider: {provider}")
+
+
+def _extract_openai_output_text(payload: dict[str, Any]) -> str:
     if isinstance(payload.get("output_text"), str) and payload["output_text"].strip():
         return payload["output_text"].strip()
 
@@ -112,6 +133,23 @@ def _extract_output_text(payload: dict[str, Any]) -> str:
                 continue
             if content.get("type") == "output_text" and content.get("text"):
                 texts.append(str(content["text"]).strip())
+    return "\n".join(text for text in texts if text).strip()
+
+
+def _extract_gemini_output_text(payload: dict[str, Any]) -> str:
+    texts: list[str] = []
+    for candidate in payload.get("candidates", []) or []:
+        if not isinstance(candidate, dict):
+            continue
+        content = candidate.get("content")
+        if not isinstance(content, dict):
+            continue
+        for part in content.get("parts", []) or []:
+            if not isinstance(part, dict):
+                continue
+            text = part.get("text")
+            if text:
+                texts.append(str(text).strip())
     return "\n".join(text for text in texts if text).strip()
 
 
@@ -131,9 +169,9 @@ def _fetch_pr_snapshot(context: GitHubContext) -> dict[str, Any]:
     return {"pr": pr, "files": files, "diff": diff}
 
 
-def _build_openai_prompt(
+def _snapshot_prompt_payload(
     snapshot: dict[str, Any], context: GitHubContext
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     pr = snapshot["pr"]
     changed_files = [
         {
@@ -145,7 +183,7 @@ def _build_openai_prompt(
         for item in snapshot.get("files", []) or []
         if isinstance(item, dict)
     ]
-    prompt = {
+    return {
         "repo": context.repo,
         "pull_request": {
             "number": pr.get("number"),
@@ -159,8 +197,12 @@ def _build_openai_prompt(
         "changed_files": changed_files,
         "diff": snapshot["diff"],
     }
-    system = (
-        "You are reviewing a pull request for a Python repository.\n"
+
+
+def _system_prompt(provider: str) -> str:
+    provider_name = "Codex" if provider == "openai" else "Gemini"
+    return (
+        f"You are {provider_name} reviewing a pull request for a Python repository.\n"
         "Return a concise GitHub review comment in Simplified Chinese.\n"
         "Focus on correctness, regressions, missing tests, workflow risk, and maintainability.\n"
         "If no concrete issue is found, say so explicitly.\n"
@@ -173,6 +215,13 @@ def _build_openai_prompt(
         "- 1 to 3 actionable bullets\n"
         "Keep the response under 350 Chinese characters when possible."
     )
+
+
+def _build_openai_prompt(
+    snapshot: dict[str, Any], context: GitHubContext
+) -> list[dict[str, Any]]:
+    prompt = _snapshot_prompt_payload(snapshot, context)
+    system = _system_prompt("openai")
     user = json.dumps(prompt, ensure_ascii=False, indent=2)
     return [
         {"role": "system", "content": [{"type": "input_text", "text": system}]},
@@ -180,10 +229,17 @@ def _build_openai_prompt(
     ]
 
 
-def _request_ai_review(snapshot: dict[str, Any], context: GitHubContext) -> str:
-    api_key = _env("OPENAI_API_KEY")
-    if not api_key:
-        return ""
+def _build_gemini_prompt(snapshot: dict[str, Any], context: GitHubContext) -> str:
+    prompt = _snapshot_prompt_payload(snapshot, context)
+    return (
+        _system_prompt("gemini")
+        + "\n\nPull request snapshot:\n"
+        + json.dumps(prompt, ensure_ascii=False, indent=2)
+    )
+
+
+def _request_openai_review(snapshot: dict[str, Any], context: GitHubContext) -> str:
+    api_key = _required_api_key("openai")
     base_url = _env("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
     model = _env("OPENAI_MODEL", "gpt-5-mini")
     payload = {
@@ -199,13 +255,57 @@ def _request_ai_review(snapshot: dict[str, Any], context: GitHubContext) -> str:
     )
     response.raise_for_status()
     data = response.json()
-    text = _extract_output_text(data)
+    text = _extract_openai_output_text(data)
     if not text:
         raise RuntimeError("OpenAI response did not include output_text")
     return text
 
 
+def _request_gemini_review(snapshot: dict[str, Any], context: GitHubContext) -> str:
+    api_key = _required_api_key("gemini")
+    base_url = _env(
+        "GEMINI_BASE_URL",
+        "https://generativelanguage.googleapis.com/v1beta",
+    ).rstrip("/")
+    model = _env("GEMINI_MODEL", "gemini-2.5-flash")
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": _build_gemini_prompt(snapshot, context)}],
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 800,
+        },
+    }
+    response = requests.post(
+        f"{base_url}/models/{model}:generateContent",
+        headers={"Content-Type": "application/json"},
+        params={"key": api_key},
+        json=payload,
+        timeout=180,
+    )
+    response.raise_for_status()
+    data = response.json()
+    text = _extract_gemini_output_text(data)
+    if not text:
+        raise RuntimeError("Gemini response did not include candidate text")
+    return text
+
+
+def _request_ai_review(snapshot: dict[str, Any], context: GitHubContext) -> str:
+    provider = _provider()
+    if provider == "openai":
+        return _request_openai_review(snapshot, context)
+    if provider == "gemini":
+        return _request_gemini_review(snapshot, context)
+    raise RuntimeError(f"unsupported AI review provider: {provider}")
+
+
 def _existing_comment_id(context: GitHubContext) -> int | None:
+    marker = _comment_marker()
     comments = _github_get(
         context,
         f"/repos/{context.repo}/issues/{context.pr_number}/comments?per_page=100",
@@ -214,7 +314,7 @@ def _existing_comment_id(context: GitHubContext) -> int | None:
         if not isinstance(comment, dict):
             continue
         body = str(comment.get("body") or "")
-        if COMMENT_MARKER in body:
+        if marker in body:
             return int(comment["id"])
     return None
 
@@ -237,15 +337,22 @@ def _publish_comment(context: GitHubContext, body: str) -> None:
 def main() -> int:
     try:
         context = _must_context()
-        if not _env("OPENAI_API_KEY"):
-            print("OPENAI_API_KEY is not configured; skipping AI review comment.")
+        provider = _provider()
+        if not _required_api_key(provider):
+            print(f"{provider} API key is not configured; skipping AI review comment.")
             return 0
         snapshot = _fetch_pr_snapshot(context)
         review = _request_ai_review(snapshot, context)
         pr_url = snapshot["pr"].get("html_url", "")
-        body = f"{COMMENT_MARKER}\n## AI 辅助代码检视\n- PR: {pr_url}\n\n{review}\n"
+        body = (
+            f"{_comment_marker()}\n"
+            f"## {_comment_heading()}\n"
+            f"- Provider: `{provider}`\n"
+            f"- PR: {pr_url}\n\n"
+            f"{review}\n"
+        )
         _publish_comment(context, body)
-        print("AI review comment published.")
+        print(f"{provider} review comment published.")
         return 0
     except requests.HTTPError as exc:
         print(f"HTTP error: {exc}", file=sys.stderr)

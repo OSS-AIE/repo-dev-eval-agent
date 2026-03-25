@@ -1,0 +1,59 @@
+name: Gemini PR Review
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: gemini-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Skip when Gemini secret is missing
+        if: ${{ secrets.GEMINI_API_KEY == '' && secrets.GOOGLE_API_KEY == '' }}
+        run: echo "GEMINI_API_KEY or GOOGLE_API_KEY is not configured; skipping Gemini review."
+
+      - name: Generate Gemini review comment
+        if: ${{ secrets.GEMINI_API_KEY != '' || secrets.GOOGLE_API_KEY != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          AI_REVIEW_PROVIDER: gemini
+          AI_REVIEW_MARKER: "<!-- oss-aie-gemini-review -->"
+          AI_REVIEW_HEADING: "Gemini AI Code Review"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GEMINI_BASE_URL: ${{ secrets.GEMINI_BASE_URL }}
+          GEMINI_MODEL: ${{ vars.GEMINI_REVIEW_MODEL }}
+        run: python tools/ai_pr_review.py
