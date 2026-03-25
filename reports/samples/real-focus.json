@@ -1,0 +1,3070 @@
+[
+  {
+    "repo": "vllm-project/vllm",
+    "local_path": "D:\\vbox\\repos\\vllm_upstream",
+    "static": {
+      "style_defined": true,
+      "style_evidence": [
+        ".clang-format",
+        "pyproject.toml:tool.ruff",
+        "pyproject.toml:tool.mypy",
+        "pyproject.toml:tool.pytest"
+      ],
+      "code_check_supported": true,
+      "check_tools": [
+        ".coveragerc",
+        ".github\\workflows\\pre-commit.yml:actionlint",
+        ".github\\workflows\\pre-commit.yml:markdownlint",
+        ".github\\workflows\\pre-commit.yml:mypy",
+        ".github\\workflows\\pre-commit.yml:pre-commit",
+        ".pre-commit-config.yaml",
+        "mypy",
+        "requirements/test.txt:coverage",
+        "requirements/test.txt:pytest",
+        "ruff"
+      ],
+      "rule_count_estimate": 41,
+      "rule_count_details": [
+        {
+          "source": "pyproject.toml",
+          "count": 14,
+          "note": "explicit Ruff selectors"
+        },
+        {
+          "source": ".pre-commit-config.yaml",
+          "count": 27,
+          "note": "pre-commit hook count"
+        }
+      ],
+      "auto_fix_supported": true,
+      "auto_fix_evidence": [
+        "pyproject.toml formatter config"
+      ],
+      "ai_review_signals": [],
+      "inferred_build_command": "VLLM_USE_PRECOMPILED=1 uv pip install -e .",
+      "inferred_unit_test_command": "pytest -q",
+      "inferred_code_check_command": "pre-commit run -a",
+      "inference_evidence": [
+        "container strategy: docker_build",
+        "container environment can be prepared locally",
+        "markdown scanned: 481 files",
+        "tests/ or pytest.ini detected",
+        ".pre-commit-config.yaml detected",
+        "documented build command: docs/contributing/README.md"
+      ],
+      "container_environment": {
+        "defined": true,
+        "runnable_definition_present": true,
+        "preferred_strategy": "docker_build",
+        "dockerfiles": [
+          "docker/Dockerfile",
+          "docker/Dockerfile.cpu",
+          "docker/Dockerfile.nightly_torch",
+          "docker/Dockerfile.ppc64le",
+          "docker/Dockerfile.rocm",
+          "docker/Dockerfile.rocm_base",
+          "docker/Dockerfile.s390x",
+          "docker/Dockerfile.tpu",
+          "docker/Dockerfile.xpu"
+        ],
+        "compose_files": [
+          "examples/online_serving/prometheus_grafana/docker-compose.yaml"
+        ],
+        "devcontainer_files": [],
+        "reference_files": [],
+        "base_images": [
+          "base-${TARGETARCH}",
+          "fetch_vllm_${REMOTE_VLLM}",
+          "grafana/grafana:latest",
+          "intel/deep-learning-essentials:2025.3.2-0-devel-ubuntu24.04",
+          "nvidia/cuda:${CUDA_VERSION}-base-ubuntu22.04",
+          "nvidia/cuda:${CUDA_VERSION}-devel-ubuntu20.04",
+          "nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04",
+          "prom/prometheus:latest",
+          "registry.access.redhat.com/ubi9/ubi-minimal:${BASE_UBI_IMAGE_TAG}",
+          "rocm/dev-ubuntu-22.04:7.0-complete",
+          "rocm/vllm-dev:base",
+          "scratch",
+          "ubuntu:22.04",
+          "us-central1-docker.pkg.dev/tpu-pytorch-releases/docker/xla:nightly_3.12_tpuvm_$NIGHTLY_DATE"
+        ],
+        "workflow_images": [],
+        "requires_gpu": true,
+        "setup_supported_locally": true,
+        "setup_evidence": [
+          "dockerfile:docker/Dockerfile",
+          "docker cli available",
+          "docker daemon 29.2.0",
+          "docker nvidia runtime available",
+          "gpu-capable docker runtime detected"
+        ],
+        "setup_blockers": [],
+        "inferred_setup_command": "docker build -f docker/Dockerfile -t repo-eval/vllm_upstream:latest .",
+        "runtime": {
+          "engine": "docker",
+          "cli_available": true,
+          "daemon_available": true,
+          "server_version": "29.2.0",
+          "nvidia_runtime_available": true,
+          "evidence": [
+            "docker cli available",
+            "docker daemon 29.2.0",
+            "docker nvidia runtime available"
+          ]
+        },
+        "note": "container environment can be prepared locally"
+      },
+      "documentation": {
+        "markdown_files_scanned": 481,
+        "relevant_files": [
+          ".buildkite/performance-benchmarks/README.md",
+          "benchmarks/auto_tune/README.md",
+          "benchmarks/kernels/deepgemm/README.md",
+          "benchmarks/multi_turn/README.md",
+          "CODE_OF_CONDUCT.md",
+          "docs/benchmarking/cli.md",
+          "docs/benchmarking/dashboard.md",
+          "docs/benchmarking/sweeps.md",
+          "docs/cli/README.md",
+          "docs/contributing/ci/failures.md",
+          "docs/contributing/ci/nightly_builds.md",
+          "docs/contributing/ci/update_pytorch_version.md",
+          "docs/contributing/dockerfile/dockerfile.md",
+          "docs/contributing/incremental_build.md",
+          "docs/contributing/model/basic.md",
+          "docs/contributing/model/transcription.md",
+          "docs/contributing/profiling.md",
+          "docs/contributing/README.md",
+          "docs/deployment/frameworks/anything-llm.md",
+          "docs/deployment/frameworks/autogen.md",
+          "docs/deployment/frameworks/cerebrium.md",
+          "docs/deployment/frameworks/chatbox.md",
+          "docs/deployment/frameworks/dify.md",
+          "docs/deployment/frameworks/dstack.md",
+          "docs/deployment/frameworks/haystack.md",
+          "docs/deployment/frameworks/hf_inference_endpoints.md",
+          "docs/deployment/frameworks/litellm.md",
+          "docs/deployment/frameworks/lws.md",
+          "docs/deployment/frameworks/open-webui.md",
+          "docs/deployment/frameworks/retrieval_augmented_generation.md",
+          "docs/deployment/frameworks/runpod.md",
+          "docs/deployment/frameworks/skypilot.md",
+          "docs/deployment/frameworks/streamlit.md",
+          "docs/deployment/integrations/kthena.md",
+          "docs/deployment/integrations/kuberay.md",
+          "docs/deployment/integrations/llamastack.md",
+          "docs/deployment/integrations/production-stack.md",
+          "docs/deployment/nginx.md",
+          "docs/design/cuda_graphs.md",
+          "docs/design/debug_vllm_compile.md",
+          "docs/design/fused_moe_modular_kernel.md",
+          "docs/design/lora_resolver_plugins.md",
+          "docs/design/metrics.md",
+          "docs/design/multiprocessing.md",
+          "docs/design/optimization_levels.md",
+          "docs/design/p2p_nccl_connector.md",
+          "docs/design/paged_attention.md",
+          "docs/design/plugin_system.md",
+          "docs/design/prefix_caching.md",
+          "docs/design/torch_compile.md",
+          "docs/features/batch_invariance.md",
+          "docs/features/custom_arguments.md",
+          "docs/features/custom_logitsprocs.md",
+          "docs/features/interleaved_thinking.md",
+          "docs/features/mooncake_connector_usage.md",
+          "docs/features/nixl_connector_usage.md",
+          "docs/features/quantization/auto_awq.md",
+          "docs/features/quantization/bnb.md",
+          "docs/features/quantization/fp8.md",
+          "docs/features/quantization/gptqmodel.md",
+          "docs/features/quantization/inc.md",
+          "docs/features/quantization/int4.md",
+          "docs/features/quantization/int8.md",
+          "docs/features/quantization/modelopt.md",
+          "docs/features/quantization/quantized_kvcache.md",
+          "docs/features/quantization/quark.md",
+          "docs/features/quantization/torchao.md",
+          "docs/features/reasoning_outputs.md",
+          "docs/features/sleep_mode.md",
+          "docs/features/speculative_decoding/suffix.md",
+          "docs/features/tool_calling.md",
+          "docs/getting_started/installation/cpu.apple.inc.md",
+          "docs/getting_started/installation/cpu.arm.inc.md",
+          "docs/getting_started/installation/cpu.md",
+          "docs/getting_started/installation/cpu.s390x.inc.md",
+          "docs/getting_started/installation/cpu.x86.inc.md",
+          "docs/getting_started/installation/gpu.cuda.inc.md",
+          "docs/getting_started/installation/gpu.rocm.inc.md",
+          "docs/getting_started/installation/gpu.xpu.inc.md",
+          "docs/getting_started/installation/python_env_setup.inc.md",
+          "docs/getting_started/quickstart.md",
+          "docs/governance/collaboration.md",
+          "docs/governance/process.md",
+          "docs/models/extensions/tensorizer.md",
+          "docs/models/supported_models.md",
+          "docs/serving/data_parallel_deployment.md",
+          "docs/serving/expert_parallel_deployment.md",
+          "docs/serving/integrations/langchain.md",
+          "docs/serving/integrations/llamaindex.md",
+          "docs/serving/openai_compatible_server.md",
+          "docs/serving/parallelism_scaling.md",
+          "docs/usage/README.md",
+          "docs/usage/reproducibility.md",
+          "docs/usage/security.md",
+          "docs/usage/troubleshooting.md",
+          "examples/offline_inference/disaggregated-prefill-v1/README.md",
+          "examples/offline_inference/openai_batch/README.md",
+          "examples/online_serving/disaggregated_encoder/README.md",
+          "examples/online_serving/opentelemetry/README.md",
+          "examples/online_serving/prometheus_grafana/README.md",
+          "examples/others/lmcache/README.md",
+          "README.md",
+          "tests/evals/gpt_oss/README.md",
+          "tests/evals/gsm8k/README.md",
+          "tests/v1/ec_connector/integration/README.md",
+          "tools/ep_kernels/README.md",
+          "tools/profiler/nsys_profile_tools/README.md",
+          "origin/main:.buildkite/performance-benchmarks/README.md",
+          "origin/main:AGENTS.md",
+          "origin/main:CODE_OF_CONDUCT.md",
+          "origin/main:README.md",
+          "origin/main:benchmarks/auto_tune/README.md",
+          "origin/main:benchmarks/kernels/deepgemm/README.md",
+          "origin/main:benchmarks/multi_turn/README.md",
+          "origin/main:docs/benchmarking/cli.md",
+          "origin/main:docs/benchmarking/dashboard.md",
+          "origin/main:docs/benchmarking/sweeps.md",
+          "origin/main:docs/cli/README.md",
+          "origin/main:docs/contributing/README.md",
+          "origin/main:docs/contributing/ci/failures.md",
+          "origin/main:docs/contributing/ci/nightly_builds.md",
+          "origin/main:docs/contributing/ci/update_pytorch_version.md",
+          "origin/main:docs/contributing/dockerfile/dockerfile.md",
+          "origin/main:docs/contributing/incremental_build.md",
+          "origin/main:docs/contributing/model/basic.md",
+          "origin/main:docs/contributing/model/transcription.md",
+          "origin/main:docs/contributing/profiling.md",
+          "origin/main:docs/deployment/frameworks/anything-llm.md",
+          "origin/main:docs/deployment/frameworks/autogen.md",
+          "origin/main:docs/deployment/frameworks/cerebrium.md",
+          "origin/main:docs/deployment/frameworks/chatbox.md",
+          "origin/main:docs/deployment/frameworks/dify.md",
+          "origin/main:docs/deployment/frameworks/dstack.md",
+          "origin/main:docs/deployment/frameworks/haystack.md",
+          "origin/main:docs/deployment/frameworks/hf_inference_endpoints.md",
+          "origin/main:docs/deployment/frameworks/litellm.md",
+          "origin/main:docs/deployment/frameworks/lws.md",
+          "origin/main:docs/deployment/frameworks/open-webui.md",
+          "origin/main:docs/deployment/frameworks/retrieval_augmented_generation.md",
+          "origin/main:docs/deployment/frameworks/runpod.md",
+          "origin/main:docs/deployment/frameworks/skypilot.md",
+          "origin/main:docs/deployment/frameworks/streamlit.md",
+          "origin/main:docs/deployment/integrations/kthena.md",
+          "origin/main:docs/deployment/integrations/kuberay.md",
+          "origin/main:docs/deployment/integrations/llamastack.md",
+          "origin/main:docs/deployment/integrations/production-stack.md",
+          "origin/main:docs/deployment/nginx.md",
+          "origin/main:docs/design/cuda_graphs.md",
+          "origin/main:docs/design/debug_vllm_compile.md",
+          "origin/main:docs/design/fused_moe_modular_kernel.md",
+          "origin/main:docs/design/lora_resolver_plugins.md",
+          "origin/main:docs/design/metrics.md",
+          "origin/main:docs/design/multiprocessing.md",
+          "origin/main:docs/design/optimization_levels.md",
+          "origin/main:docs/design/p2p_nccl_connector.md",
+          "origin/main:docs/design/paged_attention.md",
+          "origin/main:docs/design/plugin_system.md",
+          "origin/main:docs/design/prefix_caching.md",
+          "origin/main:docs/design/torch_compile.md",
+          "origin/main:docs/features/batch_invariance.md",
+          "origin/main:docs/features/custom_arguments.md",
+          "origin/main:docs/features/custom_logitsprocs.md",
+          "origin/main:docs/features/interleaved_thinking.md",
+          "origin/main:docs/features/mooncake_connector_usage.md",
+          "origin/main:docs/features/nixl_connector_usage.md",
+          "origin/main:docs/features/quantization/auto_awq.md",
+          "origin/main:docs/features/quantization/bnb.md",
+          "origin/main:docs/features/quantization/fp8.md",
+          "origin/main:docs/features/quantization/gptqmodel.md",
+          "origin/main:docs/features/quantization/inc.md",
+          "origin/main:docs/features/quantization/int4.md",
+          "origin/main:docs/features/quantization/int8.md",
+          "origin/main:docs/features/quantization/modelopt.md",
+          "origin/main:docs/features/quantization/quantized_kvcache.md",
+          "origin/main:docs/features/quantization/quark.md",
+          "origin/main:docs/features/quantization/torchao.md",
+          "origin/main:docs/features/reasoning_outputs.md",
+          "origin/main:docs/features/sleep_mode.md",
+          "origin/main:docs/features/speculative_decoding/suffix.md",
+          "origin/main:docs/features/tool_calling.md",
+          "origin/main:docs/getting_started/installation/cpu.apple.inc.md",
+          "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+          "origin/main:docs/getting_started/installation/cpu.md",
+          "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+          "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+          "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+          "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+          "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+          "origin/main:docs/getting_started/installation/python_env_setup.inc.md",
+          "origin/main:docs/getting_started/quickstart.md",
+          "origin/main:docs/governance/collaboration.md",
+          "origin/main:docs/governance/process.md",
+          "origin/main:docs/models/extensions/instanttensor.md",
+          "origin/main:docs/models/extensions/tensorizer.md",
+          "origin/main:docs/models/supported_models.md",
+          "origin/main:docs/serving/data_parallel_deployment.md",
+          "origin/main:docs/serving/expert_parallel_deployment.md",
+          "origin/main:docs/serving/integrations/langchain.md",
+          "origin/main:docs/serving/integrations/llamaindex.md",
+          "origin/main:docs/serving/openai_compatible_server.md",
+          "origin/main:docs/serving/parallelism_scaling.md",
+          "origin/main:docs/usage/README.md",
+          "origin/main:docs/usage/reproducibility.md",
+          "origin/main:docs/usage/security.md",
+          "origin/main:docs/usage/troubleshooting.md",
+          "origin/main:examples/offline_inference/disaggregated-prefill-v1/README.md",
+          "origin/main:examples/offline_inference/openai_batch/README.md",
+          "origin/main:examples/online_serving/disaggregated_encoder/README.md",
+          "origin/main:examples/online_serving/opentelemetry/README.md",
+          "origin/main:examples/online_serving/prometheus_grafana/README.md",
+          "origin/main:examples/others/lmcache/README.md",
+          "origin/main:tests/evals/gpt_oss/README.md",
+          "origin/main:tests/evals/gsm8k/README.md",
+          "origin/main:tests/v1/ec_connector/integration/README.md",
+          "origin/main:tools/ep_kernels/README.md",
+          "origin/main:tools/profiler/nsys_profile_tools/README.md"
+        ],
+        "commands": [
+          {
+            "source_file": "benchmarks/kernels/deepgemm/README.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "benchmarks/kernels/deepgemm/README.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "docs/benchmarking/cli.md",
+            "category": "install",
+            "command": "uv pip install xxhash cbor2"
+          },
+          {
+            "source_file": "docs/benchmarking/dashboard.md",
+            "category": "container",
+            "command": "docker run -it --entrypoint /bin/bash -v /data/huggingface:/root/.cache/huggingface -e HF_TOKEN=$HF_TOKEN -e ON_CPU=1 --shm-size=16g --name vllm-cpu-ci public.ecr.aws/q9t5s3a7/vllm-ci-test-repo:${VLLM_COMMIT}-${IMG_SUFFIX}"
+          },
+          {
+            "source_file": "docs/contributing/ci/update_pytorch_version.md",
+            "category": "install",
+            "command": "uv pip install torch torchvision torchaudio \\\n--index-url https://download.pytorch.org/whl/test/cu128"
+          },
+          {
+            "source_file": "docs/contributing/dockerfile/dockerfile.md",
+            "category": "container",
+            "command": "docker run \\\n--rm \\\n--user \"$(id -u):$(id -g)\" \\\n--workdir /workspace \\\n--volume \"$(pwd)\":/workspace \\\nghcr.io/patrickhoefler/dockerfilegraph:alpine \\\n--output png \\\n--dpi 200 \\\n--max-label-length 50 \\\n--filename docker/Dockerfile \\\n--legend"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/build.txt --torch-backend=auto"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "cmake --preset release"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "cmake --build --preset release --target install"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "bin             cmake_install.cmake      _deps                                machete_generation.log"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "build.ninja     CPackConfig.cmake        detect_cuda_compute_capabilities.cu  marlin_generation.log"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "_C.abi3.so      CPackSourceConfig.cmake  detect_cuda_version.cc               _moe_C.abi3.so"
+          },
+          {
+            "source_file": "docs/contributing/incremental_build.md",
+            "category": "test",
+            "command": "CMakeCache.txt  ctest                    _flashmla_C.abi3.so                  moe_marlin_generation.log"
+          },
+          {
+            "source_file": "docs/contributing/profiling.md",
+            "category": "install",
+            "command": "pip install snakeviz"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu129"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "grep -v '^torch==' requirements/build.txt | uv pip install -r -"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "build",
+            "command": "uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "check",
+            "command": "uv pip install pre-commit"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install pre-commit"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit install"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run     # runs on staged files"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run -a  # runs on all files (short for --all-files)"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run --hook-stage manual mypy-3.10"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/docs.txt"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/common.txt -r requirements/dev.txt --torch-backend=auto"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "test",
+            "command": "uv pip install pytest pytest-asyncio"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install pytest pytest-asyncio"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "test",
+            "command": "pytest tests/"
+          },
+          {
+            "source_file": "docs/contributing/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/test_logger.py"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/anything-llm.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/autogen.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/autogen.md",
+            "category": "install",
+            "command": "pip install -U \"autogen-agentchat\" \"autogen-ext[openai]\""
+          },
+          {
+            "source_file": "docs/deployment/frameworks/cerebrium.md",
+            "category": "install",
+            "command": "pip install cerebrium"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/chatbox.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/dify.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/dify.md",
+            "category": "container",
+            "command": "docker compose up -d"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/dstack.md",
+            "category": "install",
+            "command": "pip install dstack[all]"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/dstack.md",
+            "category": "install",
+            "command": "- pip install vllm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/haystack.md",
+            "category": "install",
+            "command": "pip install vllm haystack-ai"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/litellm.md",
+            "category": "install",
+            "command": "pip install vllm litellm"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/open-webui.md",
+            "category": "container",
+            "command": "docker run -d \\\n--name open-webui \\\n-p 3000:8080 \\\n-v open-webui:/app/backend/data \\\n-e OPENAI_API_BASE_URL=http://0.0.0.0:8000/v1 \\\n--restart always \\\nghcr.io/open-webui/open-webui:main"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/retrieval_augmented_generation.md",
+            "category": "install",
+            "command": "pip install -U vllm \\\nlangchain_milvus langchain_openai \\\nlangchain_community beautifulsoup4 \\\nlangchain-text-splitters"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/retrieval_augmented_generation.md",
+            "category": "install",
+            "command": "pip install vllm \\\nllama-index llama-index-readers-web \\\nllama-index-llms-openai-like    \\\nllama-index-embeddings-openai-like \\\nllama-index-vector-stores-milvus \\"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install skypilot-nightly"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install vllm==0.4.0.post1"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install gradio openai"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install flash-attn==2.5.7"
+          },
+          {
+            "source_file": "docs/deployment/frameworks/streamlit.md",
+            "category": "install",
+            "command": "pip install vllm streamlit openai"
+          },
+          {
+            "source_file": "docs/deployment/integrations/llamastack.md",
+            "category": "install",
+            "command": "pip install llama-stack -q"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build . -f Dockerfile.nginx --tag nginx-lb"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile . --tag vllm"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build \\\n-f docker/Dockerfile . \\\n--tag vllm \\\n--build-arg http_proxy=$http_proxy \\\n--build-arg https_proxy=$https_proxy"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker network create vllm_nginx"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n--ipc host \\\n--network vllm_nginx \\\n--gpus device=0 \\\n--shm-size=10.24gb \\\n-v $hf_cache_dir:/root/.cache/huggingface/ \\\n-p 8081:8000 \\\n--name vllm0 vllm \\\n--model meta-llama/Llama-2-7b-chat-hf"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n--ipc host \\\n--network vllm_nginx \\\n--gpus device=1 \\\n--shm-size=10.24gb \\\n-v $hf_cache_dir:/root/.cache/huggingface/ \\\n-p 8082:8000 \\\n--name vllm1 vllm \\\n--model meta-llama/Llama-2-7b-chat-hf"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n-p 8000:80 \\\n--network vllm_nginx \\\n-v ./nginx_conf/:/etc/nginx/conf.d/ \\\n--name nginx-lb nginx-lb:latest"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker logs vllm0 | grep Uvicorn"
+          },
+          {
+            "source_file": "docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker logs vllm1 | grep Uvicorn"
+          },
+          {
+            "source_file": "docs/design/debug_vllm_compile.md",
+            "category": "install",
+            "command": "pip install tlparse"
+          },
+          {
+            "source_file": "docs/design/p2p_nccl_connector.md",
+            "category": "install",
+            "command": "pip install \"vllm>=0.9.2\""
+          },
+          {
+            "source_file": "docs/features/quantization/auto_awq.md",
+            "category": "install",
+            "command": "pip install autoawq"
+          },
+          {
+            "source_file": "docs/features/quantization/bnb.md",
+            "category": "install",
+            "command": "pip install bitsandbytes>=0.49.2"
+          },
+          {
+            "source_file": "docs/features/quantization/fp8.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "docs/features/quantization/fp8.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "docs/features/quantization/gptqmodel.md",
+            "category": "install",
+            "command": "pip install -U gptqmodel --no-build-isolation -v"
+          },
+          {
+            "source_file": "docs/features/quantization/inc.md",
+            "category": "install",
+            "command": "uv pip install auto-round"
+          },
+          {
+            "source_file": "docs/features/quantization/int4.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "docs/features/quantization/int4.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "docs/features/quantization/int8.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "docs/features/quantization/int8.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "docs/features/quantization/modelopt.md",
+            "category": "install",
+            "command": "pip install nvidia-modelopt"
+          },
+          {
+            "source_file": "docs/features/quantization/modelopt.md",
+            "category": "test",
+            "command": "pytest -q tests/quantization/test_modelopt.py"
+          },
+          {
+            "source_file": "docs/features/quantization/quantized_kvcache.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "docs/features/quantization/quark.md",
+            "category": "install",
+            "command": "pip install amd-quark"
+          },
+          {
+            "source_file": "docs/features/quantization/quark.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "docs/features/quantization/torchao.md",
+            "category": "install",
+            "command": "pip install \\\n--pre torchao>=10.0.0 \\\n--index-url https://download.pytorch.org/whl/nightly/cu126"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --index-strategy unsafe-best-match"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_aarch64.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_aarch64.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/nightly/cpu --index-strategy first-index"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install https://wheels.vllm.ai/4fa7ce46f31cbd97b4651694caf9991cc395a259/vllm-0.13.0rc2.dev104%2Bg4fa7ce46f.cpu-cp38-abi3-manylinux_2_35_aarch64.whl # current nightly build (the filename will change!)"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT}/cpu --index-strategy first-index"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu-build.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu-build.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "build",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:latest-arm64"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:v${VLLM_VERSION}-arm64"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker run \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai-cpu:latest-arm64 <args...>"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull public.ecr.aws/q9t5s3a7/vllm-ci-postmerge-repo:${VLLM_COMMIT}-arm64-cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--platform=linux/arm64 \\\n--build-arg VLLM_CPU_ARM_BF16=<false (default)|true> \\\n--tag vllm-cpu-env \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--tag vllm-cpu-arm64 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_ARM_BF16=true \\\n--tag vllm-cpu-arm64-bf16 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker buildx build -f docker/Dockerfile.cpu \\\n--platform=linux/arm64 \\\n--build-arg VLLM_CPU_ARM_BF16=true \\\n--build-arg max_jobs=4 \\\n--tag vllm-cpu-arm64-bf16 \\\n--target vllm-openai \\\n--load ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--security-opt seccomp=unconfined \\\n--cap-add SYS_NICE \\\n--shm-size=4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\n-e VLLM_CPU_OMP_THREADS_BIND=<CPU cores for inference> \\\nvllm-cpu-arm64 \\\nmeta-llama/Llama-3.2-1B-Instruct \\\n--dtype=bfloat16 \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 VLLM_PRECOMPILED_WHEEL_VARIANT=cpu VLLM_TARGET_DEVICE=cpu uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 VLLM_PRECOMPILED_WHEEL_VARIANT=cpu VLLM_TARGET_DEVICE=cpu uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.md",
+            "category": "container",
+            "command": "docker run ... --cap-add SYS_NICE --security-opt seccomp=unconfined  ..."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "dnf install -y \\\nwhich procps findutils tar vim git gcc g++ make patch make cython zlib-devel \\\nlibjpeg-turbo-devel libtiff-devel libpng-devel libwebp-devel freetype-devel harfbuzz-devel \\\nopenssl-devel openblas openblas-devel wget autoconf automake libtool cmake numactl-devel"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "uv pip install -v \\\n--torch-backend auto \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\nuv pip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "install",
+            "command": "uv pip install -v \\\n--torch-backend auto \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\nuv pip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "pip install -v \\\n--extra-index-url https://download.pytorch.org/whl/nightly/cpu \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\npip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "install",
+            "command": "pip install -v \\\n--extra-index-url https://download.pytorch.org/whl/nightly/cpu \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\npip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.s390x \\\n--tag vllm-cpu-env ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--privileged true \\\n--shm-size 4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\n-e VLLM_CPU_OMP_THREADS_BIND=<CPU cores for inference> \\\nvllm-cpu-env \\\n--model meta-llama/Llama-3.2-1B-Instruct \\\n--dtype float \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_x86_64.whl --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_x86_64.whl --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/nightly/cpu --index-strategy first-index --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT}/cpu --index-strategy first-index --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu-build.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu-build.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "build",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install dist/*.whl"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:latest-x86_64"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:v${VLLM_VERSION}-x86_64"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker run \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai-cpu:latest-x86_64 <args...>"
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_DISABLE_AVX512=<false (default)|true> \\\n--build-arg VLLM_CPU_AVX2=<false (default)|true> \\\n--build-arg VLLM_CPU_AVX512=<false (default)|true> \\\n--build-arg VLLM_CPU_AVX512BF16=<false (default)|true> \\\n--build-arg VLLM_CPU_AVX512VNNI=<false (default)|true> \\\n--build-arg VLLM_CPU_AMXBF16=<false|true (default)> \\\n--tag vllm-cpu-env \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu --tag vllm-cpu-env --target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_AVX512=true \\\n--build-arg VLLM_CPU_AVX512BF16=true \\\n--build-arg VLLM_CPU_AVX512VNNI=true \\\n--tag vllm-cpu-avx512 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_AVX2=true \\\n--tag vllm-cpu-avx2 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--security-opt seccomp=unconfined \\\n--cap-add SYS_NICE \\\n--shm-size=4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\nvllm-cpu-env \\\nmeta-llama/Llama-3.2-1B-Instruct \\\n--dtype=bfloat16 \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --torch-backend=auto"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install vllm --extra-index-url https://download.pytorch.org/whl/cu129"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cu${CUDA_VERSION}-cp38-abi3-manylinux_2_35_${CPU_ARCH}.whl --extra-index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -U vllm \\\n--torch-backend=auto \\\n--extra-index-url https://wheels.vllm.ai/nightly # add variant subdirectory here if needed"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install -U https://wheels.vllm.ai/nightly/vllm-0.11.2.dev399%2Bg3c7461c18-cp38-abi3-manylinux_2_31_x86_64.whl # current nightly build (the filename will change!)"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install -U https://wheels.vllm.ai/${VLLM_COMMIT}/vllm-0.11.2.dev399%2Bg3c7461c18-cp38-abi3-manylinux_2_31_x86_64.whl # from specific commit"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm \\\n--torch-backend=auto \\\n--extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT} # add variant subdirectory here if needed"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install --editable ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/build.txt"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install --no-build-isolation -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "VLLM_CUTLASS_SRC_DIR=/path/to/cutlass uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "VLLM_CUTLASS_SRC_DIR=/path/to/cutlass uv pip install -e ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run \\\n--gpus all \\\n-it \\\n--rm \\\n--ipc=host nvcr.io/nvidia/pytorch:23.10-py3"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "podman run --device nvidia.com/gpu=all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\ndocker.io/vllm/vllm-openai:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "RUN uv pip install --system vllm[audio]==0.11.0"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "RUN uv pip install --system git+https://github.com/huggingface/transformers.git"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\n--env \"VLLM_ENABLE_CUDA_COMPATIBILITY=1\" \\\nvllm/vllm-openai <args...>"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build . \\\n--target vllm-openai \\\n--tag vllm/vllm-openai \\\n--file docker/Dockerfile"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build . \\\n--file docker/Dockerfile \\\n--target vllm-openai \\\n--platform \"linux/arm64\" \\\n-t vllm/vllm-gh200-openai:latest \\\n--build-arg max_jobs=66 \\\n--build-arg nvcc_threads=2 \\\n--build-arg torch_cuda_arch_list=\"9.0 10.0+PTX\" \\\n--build-arg RUN_WHEEL_CHECK=false"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build \\\n--build-arg CUDA_VERSION=13.0.1 \\\n--build-arg BUILD_BASE_IMAGE=nvidia/cuda:13.0.1-devel-ubuntu22.04 \\\n--build-arg max_jobs=256 \\\n--build-arg nvcc_threads=2 \\\n--build-arg RUN_WHEEL_CHECK=false \\\n--build-arg torch_cuda_arch_list='9.0 10.0+PTX' \\\n--platform \"linux/arm64\" \\\n--tag vllm/vllm-gb300-openai:latest \\\n--target vllm-openai \\\n-f docker/Dockerfile \\\n."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai <args...>"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/0.15.0/rocm700"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install vllm==0.15.0+rocm700 --extra-index-url https://wheels.vllm.ai/rocm/0.15.0/rocm700"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm7.0"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "build",
+            "command": "python3 -m pip install ninja cmake wheel pybind11"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "python3 -m pip install ninja cmake wheel pybind11"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install /opt/rocm/share/amd_smi"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade numba \\\nscipy \\\nhuggingface-hub[cli,hf_transfer] \\\nsetuptools_scm"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install -r requirements/rocm.txt"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai-rocm:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker pull rocm/vllm-dev:nightly # to get the latest image"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run -it --rm \\\n--network=host \\\n--group-add=video \\\n--ipc=host \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v <path/to/your/models>:/app/models \\\n-e HF_HOME=\"/app/models\" \\\nrocm/vllm-dev:nightly"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build \\\n-f docker/Dockerfile.rocm_base \\\n-t rocm/vllm-dev:base ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.rocm -t vllm/vllm-openai-rocm ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai-rocm <args...>"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm -it \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n--network=host \\\n--ipc=host \\\n--entrypoint bash \\\nvllm/vllm-openai-rocm"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/xpu.txt"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install triton-xpu==3.6.0 --extra-index-url https://download.pytorch.org/whl/xpu"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=xpu pip install --no-build-isolation -e . -v"
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.xpu -t vllm-xpu-env --shm-size=4g ."
+          },
+          {
+            "source_file": "docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "container",
+            "command": "docker run -it \\\n--rm \\\n--network=host \\\n--device /dev/dri:/dev/dri \\\n-v /dev/dri/by-path:/dev/dri/by-path \\\n--ipc=host \\\n--privileged \\\nvllm-xpu-env"
+          },
+          {
+            "source_file": "docs/getting_started/installation/python_env_setup.inc.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed --managed-python"
+          },
+          {
+            "source_file": "docs/getting_started/installation/python_env_setup.inc.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm --torch-backend=auto"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "pip install --upgrade uv"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/"
+          },
+          {
+            "source_file": "docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm-tpu"
+          },
+          {
+            "source_file": "docs/serving/integrations/langchain.md",
+            "category": "install",
+            "command": "pip install langchain langchain_community -q"
+          },
+          {
+            "source_file": "docs/serving/integrations/llamaindex.md",
+            "category": "install",
+            "command": "pip install llama-index-llms-vllm -q"
+          },
+          {
+            "source_file": "docs/serving/parallelism_scaling.md",
+            "category": "install",
+            "command": "pip install \"ray[cgraph]\""
+          },
+          {
+            "source_file": "docs/serving/parallelism_scaling.md",
+            "category": "container",
+            "command": "docker run --gpus all \\\n--ipc=host \\\n--shm-size=16G \\\n-v /dev/shm:/dev/shm \\\nvllm/vllm-openai"
+          },
+          {
+            "source_file": "examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "docker run --rm --name jaeger \\\n-e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \\\n-p 6831:6831/udp \\\n-p 6832:6832/udp \\\n-p 5778:5778 \\\n-p 16686:16686 \\\n-p 4317:4317 \\\n-p 4318:4318 \\\n-p 14250:14250 \\\n-p 14268:14268 \\\n-p 14269:14269 \\\n-p 9411:9411 \\\njaegertracing/all-in-one:1.57"
+          },
+          {
+            "source_file": "examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "export JAEGER_IP=$(docker inspect   --format '{{ .NetworkSettings.IPAddress }}' jaeger)"
+          },
+          {
+            "source_file": "examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "export JAEGER_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' jaeger)"
+          },
+          {
+            "source_file": "examples/online_serving/opentelemetry/README.md",
+            "category": "install",
+            "command": "pip install opentelemetry-instrumentation-fastapi"
+          },
+          {
+            "source_file": "examples/online_serving/prometheus_grafana/README.md",
+            "category": "container",
+            "command": "docker compose up"
+          },
+          {
+            "source_file": "README.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "tests/evals/gpt_oss/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gpt_oss/test_gpqa_correctness.py \\\n--config-list-file=configs/models-h200.txt"
+          },
+          {
+            "source_file": "tests/evals/gpt_oss/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gpt_oss/test_gpqa_correctness.py \\\n--config-list-file=configs/models-b200.txt"
+          },
+          {
+            "source_file": "tests/evals/gsm8k/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gsm8k/test_gsm8k_correctness.py \\\n--config-list-file=configs/models-small.txt"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "uv venv --python 3.12"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/lint.txt"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "check",
+            "command": "pre-commit install"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "test",
+            "command": "uv pip install pytest pytest-asyncio tblib"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "uv pip install pytest pytest-asyncio tblib"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/test.txt"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "test",
+            "command": "pytest tests/path/to/test.py -v -s -k test_name"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "test",
+            "command": "pytest tests/path/to/dir -v -s"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "check",
+            "command": "pre-commit run"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "check",
+            "command": "pre-commit run --all-files"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "check",
+            "command": "pre-commit run ruff-check --all-files"
+          },
+          {
+            "source_file": "origin/main:AGENTS.md",
+            "category": "check",
+            "command": "pre-commit run mypy-3.10 --all-files --hook-stage manual"
+          },
+          {
+            "source_file": "origin/main:README.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "origin/main:benchmarks/kernels/deepgemm/README.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:benchmarks/kernels/deepgemm/README.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/benchmarking/cli.md",
+            "category": "install",
+            "command": "uv pip install xxhash cbor2"
+          },
+          {
+            "source_file": "origin/main:docs/benchmarking/dashboard.md",
+            "category": "container",
+            "command": "docker run -it --entrypoint /bin/bash -v /data/huggingface:/root/.cache/huggingface -e HF_TOKEN=$HF_TOKEN -e ON_CPU=1 --shm-size=16g --name vllm-cpu-ci public.ecr.aws/q9t5s3a7/vllm-ci-test-repo:${VLLM_COMMIT}-${IMG_SUFFIX}"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu129"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "grep -v '^torch==' requirements/build.txt | uv pip install -r -"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "build",
+            "command": "uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "check",
+            "command": "uv pip install pre-commit>=4.5.1"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install pre-commit>=4.5.1"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit install"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run     # runs on staged files"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run -a  # runs on all files (short for --all-files)"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "check",
+            "command": "pre-commit run --hook-stage manual mypy-3.10"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/docs.txt"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/common.txt -r requirements/dev.txt --torch-backend=auto"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "test",
+            "command": "uv pip install pytest pytest-asyncio"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "install",
+            "command": "uv pip install pytest pytest-asyncio"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "test",
+            "command": "pytest tests/"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/test_logger.py"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/ci/update_pytorch_version.md",
+            "category": "install",
+            "command": "uv pip install torch torchvision torchaudio \\\n--index-url https://download.pytorch.org/whl/test/cu128"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/dockerfile/dockerfile.md",
+            "category": "container",
+            "command": "docker run \\\n--rm \\\n--user \"$(id -u):$(id -g)\" \\\n--workdir /workspace \\\n--volume \"$(pwd)\":/workspace \\\nghcr.io/patrickhoefler/dockerfilegraph:alpine \\\n--output png \\\n--dpi 200 \\\n--max-label-length 50 \\\n--filename docker/Dockerfile \\\n--legend"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/build.txt --torch-backend=auto"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "cmake --preset release"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "cmake --build --preset release --target install"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "bin             cmake_install.cmake      _deps                                machete_generation.log"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "build.ninja     CPackConfig.cmake        detect_cuda_compute_capabilities.cu  marlin_generation.log"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "build",
+            "command": "_C.abi3.so      CPackSourceConfig.cmake  detect_cuda_version.cc               _moe_C.abi3.so"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/incremental_build.md",
+            "category": "test",
+            "command": "CMakeCache.txt  ctest                    _flashmla_C.abi3.so                  moe_marlin_generation.log"
+          },
+          {
+            "source_file": "origin/main:docs/contributing/profiling.md",
+            "category": "install",
+            "command": "pip install snakeviz"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/anything-llm.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/autogen.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/autogen.md",
+            "category": "install",
+            "command": "pip install -U \"autogen-agentchat\" \"autogen-ext[openai]\""
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/cerebrium.md",
+            "category": "install",
+            "command": "pip install cerebrium"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/chatbox.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/dify.md",
+            "category": "install",
+            "command": "pip install vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/dify.md",
+            "category": "container",
+            "command": "docker compose up -d"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/dstack.md",
+            "category": "install",
+            "command": "pip install dstack[all]"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/dstack.md",
+            "category": "install",
+            "command": "- pip install vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/haystack.md",
+            "category": "install",
+            "command": "pip install vllm haystack-ai"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/litellm.md",
+            "category": "install",
+            "command": "pip install vllm litellm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/open-webui.md",
+            "category": "container",
+            "command": "docker run -d \\\n--name open-webui \\\n-p 3000:8080 \\\n-v open-webui:/app/backend/data \\\n-e OPENAI_API_BASE_URL=http://0.0.0.0:8000/v1 \\\n--restart always \\\nghcr.io/open-webui/open-webui:main"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/retrieval_augmented_generation.md",
+            "category": "install",
+            "command": "pip install -U vllm \\\nlangchain_milvus langchain_openai \\\nlangchain_community beautifulsoup4 \\\nlangchain-text-splitters"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/retrieval_augmented_generation.md",
+            "category": "install",
+            "command": "pip install vllm \\\nllama-index llama-index-readers-web \\\nllama-index-llms-openai-like    \\\nllama-index-embeddings-openai-like \\\nllama-index-vector-stores-milvus \\"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install skypilot-nightly"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install vllm==0.4.0.post1"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install gradio openai"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/skypilot.md",
+            "category": "install",
+            "command": "pip install flash-attn==2.5.7"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/frameworks/streamlit.md",
+            "category": "install",
+            "command": "pip install vllm streamlit openai"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/integrations/llamastack.md",
+            "category": "install",
+            "command": "pip install llama-stack -q"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build . -f Dockerfile.nginx --tag nginx-lb"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile . --tag vllm"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker build \\\n-f docker/Dockerfile . \\\n--tag vllm \\\n--build-arg http_proxy=$http_proxy \\\n--build-arg https_proxy=$https_proxy"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker network create vllm_nginx"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n--ipc host \\\n--network vllm_nginx \\\n--gpus device=0 \\\n--shm-size=10.24gb \\\n-v $hf_cache_dir:/root/.cache/huggingface/ \\\n-p 8081:8000 \\\n--name vllm0 vllm \\\n--model meta-llama/Llama-2-7b-chat-hf"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n--ipc host \\\n--network vllm_nginx \\\n--gpus device=1 \\\n--shm-size=10.24gb \\\n-v $hf_cache_dir:/root/.cache/huggingface/ \\\n-p 8082:8000 \\\n--name vllm1 vllm \\\n--model meta-llama/Llama-2-7b-chat-hf"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker run \\\n-itd \\\n-p 8000:80 \\\n--network vllm_nginx \\\n-v ./nginx_conf/:/etc/nginx/conf.d/ \\\n--name nginx-lb nginx-lb:latest"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker logs vllm0 | grep Uvicorn"
+          },
+          {
+            "source_file": "origin/main:docs/deployment/nginx.md",
+            "category": "container",
+            "command": "docker logs vllm1 | grep Uvicorn"
+          },
+          {
+            "source_file": "origin/main:docs/design/debug_vllm_compile.md",
+            "category": "install",
+            "command": "pip install tlparse"
+          },
+          {
+            "source_file": "origin/main:docs/design/p2p_nccl_connector.md",
+            "category": "install",
+            "command": "pip install \"vllm>=0.9.2\""
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/auto_awq.md",
+            "category": "install",
+            "command": "pip install autoawq"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/bnb.md",
+            "category": "install",
+            "command": "pip install bitsandbytes>=0.49.2"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/fp8.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/fp8.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/gptqmodel.md",
+            "category": "install",
+            "command": "pip install -U gptqmodel --no-build-isolation -v"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/inc.md",
+            "category": "install",
+            "command": "uv pip install auto-round"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/int4.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/int4.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/int8.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/int8.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/modelopt.md",
+            "category": "install",
+            "command": "pip install nvidia-modelopt"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/modelopt.md",
+            "category": "test",
+            "command": "pytest -q tests/quantization/test_modelopt.py"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/quantized_kvcache.md",
+            "category": "install",
+            "command": "pip install llmcompressor"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/quark.md",
+            "category": "install",
+            "command": "pip install amd-quark"
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/quark.md",
+            "category": "install",
+            "command": "pip install vllm \"lm-eval[api]>=0.4.11\""
+          },
+          {
+            "source_file": "origin/main:docs/features/quantization/torchao.md",
+            "category": "install",
+            "command": "pip install \\\n--pre torchao>=10.0.0 \\\n--index-url https://download.pytorch.org/whl/nightly/cu126"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --index-strategy unsafe-best-match"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.apple.inc.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_aarch64.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_aarch64.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/nightly/cpu --index-strategy first-index"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install https://wheels.vllm.ai/4fa7ce46f31cbd97b4651694caf9991cc395a259/vllm-0.13.0rc2.dev104%2Bg4fa7ce46f.cpu-cp38-abi3-manylinux_2_35_aarch64.whl # current nightly build (the filename will change!)"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT}/cpu --index-strategy first-index"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu-build.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu-build.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "build",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install -e . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:latest-arm64"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:v${VLLM_VERSION}-arm64"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker run \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai-cpu:latest-arm64 <args...>"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker pull public.ecr.aws/q9t5s3a7/vllm-ci-postmerge-repo:${VLLM_COMMIT}-arm64-cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--platform=linux/arm64 \\\n--build-arg VLLM_CPU_ARM_BF16=<false (default)|true> \\\n--tag vllm-cpu-env \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--tag vllm-cpu-arm64 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_ARM_BF16=true \\\n--tag vllm-cpu-arm64-bf16 \\\n--target vllm-openai ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker buildx build -f docker/Dockerfile.cpu \\\n--platform=linux/arm64 \\\n--build-arg VLLM_CPU_ARM_BF16=true \\\n--build-arg max_jobs=4 \\\n--tag vllm-cpu-arm64-bf16 \\\n--target vllm-openai \\\n--load ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.arm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--security-opt seccomp=unconfined \\\n--cap-add SYS_NICE \\\n--shm-size=4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\n-e VLLM_CPU_OMP_THREADS_BIND=<CPU cores for inference> \\\nvllm-cpu-arm64 \\\nmeta-llama/Llama-3.2-1B-Instruct \\\n--dtype=bfloat16 \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 VLLM_PRECOMPILED_WHEEL_VARIANT=cpu VLLM_TARGET_DEVICE=cpu uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 VLLM_PRECOMPILED_WHEEL_VARIANT=cpu VLLM_TARGET_DEVICE=cpu uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.md",
+            "category": "container",
+            "command": "docker run ... --cap-add SYS_NICE --security-opt seccomp=unconfined  ..."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "dnf install -y \\\nwhich procps findutils tar vim git gcc g++ make patch make cython zlib-devel \\\nlibjpeg-turbo-devel libtiff-devel libpng-devel libwebp-devel freetype-devel harfbuzz-devel \\\nopenssl-devel openblas openblas-devel wget autoconf automake libtool cmake numactl-devel"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "uv pip install -v \\\n--torch-backend auto \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\nuv pip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "install",
+            "command": "uv pip install -v \\\n--torch-backend auto \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\nuv pip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "build",
+            "command": "pip install -v \\\n--extra-index-url https://download.pytorch.org/whl/nightly/cpu \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\npip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "install",
+            "command": "pip install -v \\\n--extra-index-url https://download.pytorch.org/whl/nightly/cpu \\\n-r requirements/build.txt \\\n-r requirements/cpu.txt \\\nVLLM_TARGET_DEVICE=cpu python setup.py bdist_wheel && \\\npip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.s390x \\\n--tag vllm-cpu-env ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.s390x.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--privileged true \\\n--shm-size 4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\n-e VLLM_CPU_OMP_THREADS_BIND=<CPU cores for inference> \\\nvllm-cpu-env \\\n--model meta-llama/Llama-3.2-1B-Instruct \\\n--dtype float \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_x86_64.whl --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cpu-cp38-abi3-manylinux_2_35_x86_64.whl --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/nightly/cpu --index-strategy first-index --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT}/cpu --index-strategy first-index --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu-build.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/cpu.txt --torch-backend cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu-build.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=cpu uv pip install . --no-build-isolation"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "uv pip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "install",
+            "command": "pip install dist/*.whl"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:latest-x86_64"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker pull vllm/vllm-openai-cpu:v${VLLM_VERSION}-x86_64"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker run \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai-cpu:latest-x86_64 <args...>"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.cpu \\\n--build-arg VLLM_CPU_X86=<false (default)|true> \\ # For cross-compilation"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/cpu.x86.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--security-opt seccomp=unconfined \\\n--cap-add SYS_NICE \\\n--shm-size=4g \\\n-p 8000:8000 \\\n-e VLLM_CPU_KVCACHE_SPACE=<KV cache space> \\\nvllm-cpu-env \\\nmeta-llama/Llama-3.2-1B-Instruct \\\n--dtype=bfloat16 \\\nother vLLM OpenAI server arguments"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --torch-backend=auto"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install vllm --extra-index-url https://download.pytorch.org/whl/cu129"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}+cu${CUDA_VERSION}-cp38-abi3-manylinux_2_35_${CPU_ARCH}.whl --extra-index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -U vllm \\\n--torch-backend=auto \\\n--extra-index-url https://wheels.vllm.ai/nightly # add variant subdirectory here if needed"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install -U https://wheels.vllm.ai/nightly/vllm-0.11.2.dev399%2Bg3c7461c18-cp38-abi3-manylinux_2_31_x86_64.whl # current nightly build (the filename will change!)"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "pip install -U https://wheels.vllm.ai/${VLLM_COMMIT}/vllm-0.11.2.dev399%2Bg3c7461c18-cp38-abi3-manylinux_2_31_x86_64.whl # from specific commit"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm \\\n--torch-backend=auto \\\n--extra-index-url https://wheels.vllm.ai/${VLLM_COMMIT} # add variant subdirectory here if needed"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "VLLM_USE_PRECOMPILED=1 uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install --editable ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install -r requirements/build.txt"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "uv pip install --no-build-isolation -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "build",
+            "command": "VLLM_CUTLASS_SRC_DIR=/path/to/cutlass uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "VLLM_CUTLASS_SRC_DIR=/path/to/cutlass uv pip install -e ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run \\\n--gpus all \\\n-it \\\n--rm \\\n--ipc=host nvcr.io/nvidia/pytorch:23.10-py3"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "podman run --device nvidia.com/gpu=all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\ndocker.io/vllm/vllm-openai:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "RUN uv pip install --system vllm[audio]==0.11.0"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "install",
+            "command": "RUN uv pip install --system git+https://github.com/huggingface/transformers.git"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\n--env \"VLLM_ENABLE_CUDA_COMPATIBILITY=1\" \\\nvllm/vllm-openai <args...>"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build . \\\n--target vllm-openai \\\n--tag vllm/vllm-openai \\\n--file docker/Dockerfile"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build . \\\n--file docker/Dockerfile \\\n--target vllm-openai \\\n--platform \"linux/arm64\" \\\n-t vllm/vllm-gh200-openai:latest \\\n--build-arg max_jobs=66 \\\n--build-arg nvcc_threads=2 \\\n--build-arg torch_cuda_arch_list=\"9.0 10.0+PTX\" \\\n--build-arg RUN_WHEEL_CHECK=false"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build \\\n--build-arg CUDA_VERSION=13.0.1 \\\n--build-arg BUILD_BASE_IMAGE=nvidia/cuda:13.0.1-devel-ubuntu22.04 \\\n--build-arg max_jobs=256 \\\n--build-arg nvcc_threads=2 \\\n--build-arg RUN_WHEEL_CHECK=false \\\n--build-arg torch_cuda_arch_list='9.0 10.0+PTX' \\\n--platform \"linux/arm64\" \\\n--tag vllm/vllm-gb300-openai:latest \\\n--target vllm-openai \\\n-f docker/Dockerfile \\\n."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.cuda.inc.md",
+            "category": "container",
+            "command": "docker run --runtime nvidia --gpus all \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n-p 8000:8000 \\\n--env \"HF_TOKEN=<secret>\" \\\nvllm/vllm-openai <args...>"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/0.15.0/rocm700"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install vllm==0.15.0+rocm700 --extra-index-url https://wheels.vllm.ai/rocm/0.15.0/rocm700"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm7.0"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "build",
+            "command": "python3 -m pip install ninja cmake wheel pybind11"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "python3 -m pip install ninja cmake wheel pybind11"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install /opt/rocm/share/amd_smi"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade numba \\\nscipy \\\nhuggingface-hub[cli,hf_transfer] \\\nsetuptools_scm"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "install",
+            "command": "pip install -r requirements/rocm.txt"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai-rocm:latest \\\n--model Qwen/Qwen3-0.6B"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker pull rocm/vllm-dev:nightly # to get the latest image"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run -it --rm \\\n--network=host \\\n--group-add=video \\\n--ipc=host \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v <path/to/your/models>:/app/models \\\n-e HF_HOME=\"/app/models\" \\\nrocm/vllm-dev:nightly"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build \\\n-f docker/Dockerfile.rocm_base \\\n-t rocm/vllm-dev:base ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.rocm -t vllm/vllm-openai-rocm ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n-p 8000:8000 \\\n--ipc=host \\\nvllm/vllm-openai-rocm <args...>"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.rocm.inc.md",
+            "category": "container",
+            "command": "docker run --rm -it \\\n--group-add=video \\\n--cap-add=SYS_PTRACE \\\n--security-opt seccomp=unconfined \\\n--device /dev/kfd \\\n--device /dev/dri \\\n-v ~/.cache/huggingface:/root/.cache/huggingface \\\n--env \"HF_TOKEN=$HF_TOKEN\" \\\n--network=host \\\n--ipc=host \\\n--entrypoint bash \\\nvllm/vllm-openai-rocm"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install --upgrade pip"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install -v -r requirements/xpu.txt"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "pip install triton-xpu==3.6.0 --extra-index-url https://download.pytorch.org/whl/xpu"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "install",
+            "command": "VLLM_TARGET_DEVICE=xpu pip install --no-build-isolation -e . -v"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "container",
+            "command": "docker build -f docker/Dockerfile.xpu -t vllm-xpu-env --shm-size=4g ."
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/gpu.xpu.inc.md",
+            "category": "container",
+            "command": "docker run -it \\\n--rm \\\n--network=host \\\n--device /dev/dri:/dev/dri \\\n-v /dev/dri/by-path:/dev/dri/by-path \\\n--ipc=host \\\n--privileged \\\nvllm-xpu-env"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/python_env_setup.inc.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed --managed-python"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/installation/python_env_setup.inc.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv venv --python 3.12 --seed"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "source .venv/bin/activate"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm --torch-backend=auto"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "pip install --upgrade uv"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/"
+          },
+          {
+            "source_file": "origin/main:docs/getting_started/quickstart.md",
+            "category": "install",
+            "command": "uv pip install vllm-tpu"
+          },
+          {
+            "source_file": "origin/main:docs/models/extensions/instanttensor.md",
+            "category": "install",
+            "command": "pip install instanttensor"
+          },
+          {
+            "source_file": "origin/main:docs/serving/integrations/langchain.md",
+            "category": "install",
+            "command": "pip install langchain langchain_community -q"
+          },
+          {
+            "source_file": "origin/main:docs/serving/integrations/llamaindex.md",
+            "category": "install",
+            "command": "pip install llama-index-llms-vllm -q"
+          },
+          {
+            "source_file": "origin/main:docs/serving/parallelism_scaling.md",
+            "category": "install",
+            "command": "pip install \"ray[cgraph]\""
+          },
+          {
+            "source_file": "origin/main:docs/serving/parallelism_scaling.md",
+            "category": "container",
+            "command": "docker run --gpus all \\\n--ipc=host \\\n--shm-size=16G \\\n-v /dev/shm:/dev/shm \\\nvllm/vllm-openai"
+          },
+          {
+            "source_file": "origin/main:examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "docker run --rm --name jaeger \\\n-e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \\\n-p 6831:6831/udp \\\n-p 6832:6832/udp \\\n-p 5778:5778 \\\n-p 16686:16686 \\\n-p 4317:4317 \\\n-p 4318:4318 \\\n-p 14250:14250 \\\n-p 14268:14268 \\\n-p 14269:14269 \\\n-p 9411:9411 \\\njaegertracing/all-in-one:1.57"
+          },
+          {
+            "source_file": "origin/main:examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "export JAEGER_IP=$(docker inspect   --format '{{ .NetworkSettings.IPAddress }}' jaeger)"
+          },
+          {
+            "source_file": "origin/main:examples/online_serving/opentelemetry/README.md",
+            "category": "container",
+            "command": "export JAEGER_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' jaeger)"
+          },
+          {
+            "source_file": "origin/main:examples/online_serving/opentelemetry/README.md",
+            "category": "install",
+            "command": "pip install opentelemetry-instrumentation-fastapi"
+          },
+          {
+            "source_file": "origin/main:examples/online_serving/prometheus_grafana/README.md",
+            "category": "container",
+            "command": "docker compose up"
+          },
+          {
+            "source_file": "origin/main:tests/evals/gpt_oss/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gpt_oss/test_gpqa_correctness.py \\\n--config-list-file=configs/models-h200.txt"
+          },
+          {
+            "source_file": "origin/main:tests/evals/gpt_oss/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gpt_oss/test_gpqa_correctness.py \\\n--config-list-file=configs/models-b200.txt"
+          },
+          {
+            "source_file": "origin/main:tests/evals/gsm8k/README.md",
+            "category": "test",
+            "command": "pytest -s -v tests/evals/gsm8k/test_gsm8k_correctness.py \\\n--config-list-file=configs/models-small.txt"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "incremental_build": {
+      "status": "timeout",
+      "command": "VLLM_USE_PRECOMPILED=1 /home/robell/.local/bin/uv pip install --python /mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/python -e .",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": "timeout after 3600s"
+    },
+    "unit_test": {
+      "status": "failed",
+      "command": "/mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q",
+      "duration_sec": 5.984260800061747,
+      "returncode": 4,
+      "stdout_excerpt": "",
+      "stderr_excerpt": "ImportError while loading conftest '/mnt/d/vbox/repos/vllm_upstream/tests/conftest.py'. tests/conftest.py:7: in <module>     from tblib import pickling_support E   ModuleNotFoundError: No module named 'tblib'"
+    },
+    "code_check": {
+      "status": "failed",
+      "command": "/mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/pre-commit run -a",
+      "duration_sec": 11.70119239995256,
+      "returncode": 3,
+      "stdout_excerpt": "[INFO] Installing environment for https://github.com/rhysd/actionlint. [INFO] Once installed this environment will be reused. [INFO] This may take a few minutes... An unexpected error has occurred: URLError: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1000)> Check the log at /home/robell/.cache/pre-commit/pre-commit.log",
+      "stderr_excerpt": ""
+    },
+    "pr_metrics": {
+      "remote_platform": "github",
+      "pr_window_days": 30,
+      "window_start": "2026-02-22T16:21:50.662335+00:00",
+      "window_end": "2026-03-24T16:21:50.662335+00:00",
+      "sampled_pull_count": 8,
+      "workflow_run_count": 16,
+      "latest_duration_sec": 20.0,
+      "median_duration_sec": 233.0,
+      "average_duration_sec": 468.375,
+      "estimated_cpu_core_minutes": 55.599999999999994,
+      "estimated_npu_card_minutes": null,
+      "actual_cpu_seconds": null,
+      "actual_npu_seconds": null,
+      "ai_review_supported": true,
+      "ai_review_evidence": [
+        "pr#37915 review by gemini-code-assist[bot]",
+        "pr#37234 review by gemini-code-assist[bot]",
+        "pr#37421 review by gemini-code-assist[bot]",
+        "pr#37706 review by gemini-code-assist[bot]",
+        "pr#37725 review by gemini-code-assist[bot]",
+        "pr#38011 review by gemini-code-assist[bot]",
+        "pr#37998 review by gemini-code-assist[bot]",
+        "pr#37082 review by gemini-code-assist[bot]"
+      ],
+      "workflow_run_evidence": [
+        "run:22335906128 BC Lint pull_request",
+        "run:22335906118 pre-commit pull_request",
+        "run:22335896176 BC Lint pull_request",
+        "run:22335896188 pre-commit pull_request",
+        "run:22335890061 pre-commit pull_request",
+        "run:22335890086 BC Lint pull_request",
+        "run:22335866651 BC Lint pull_request",
+        "run:22335866630 pre-commit pull_request",
+        "run:23498975498 Add label on auto-merge enabled pull_request_target",
+        "run:23498660711 New PR Bot pull_request_target",
+        "run:23498498046 New PR Bot pull_request_target",
+        "run:23497759750 Add label on auto-merge enabled pull_request_target",
+        "run:23497354719 New PR Bot pull_request_target",
+        "run:23497013304 New PR Bot pull_request_target",
+        "run:23496403013 New PR Bot pull_request_target",
+        "run:23496107624 New PR Bot pull_request_target"
+      ],
+      "collection_note": "collected from GitHub Actions and PR APIs within the last 30 days"
+    },
+    "documentation_issues": [
+      {
+        "category": "execution_failure_needs_manual_triage",
+        "root_cause": "mixed",
+        "severity": "medium",
+        "summary": "构建 命令执行失败，需要继续区分是文档漂移还是仓库行为变化",
+        "evidence": [
+          "构建 command: VLLM_USE_PRECOMPILED=1 /home/robell/.local/bin/uv pip install --python /mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/python -e .",
+          "构建 status: timeout",
+          "构建 failure: timeout after 3600s",
+          "documented commands: benchmarks/kernels/deepgemm/README.md: uv pip install -e .; docs/contributing/incremental_build.md: cmake --preset release; docs/contributing/incremental_build.md: cmake --build --preset release --target install"
+        ],
+        "recommendation": "复核文档示例、依赖锁定和仓库脚本是否一致，并为该命令补一条 CI 烟测。"
+      },
+      {
+        "category": "missing_dependency_step",
+        "root_cause": "documentation",
+        "severity": "high",
+        "summary": "测试 示例命令缺少必要的依赖准备步骤",
+        "evidence": [
+          "测试 command: /mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q",
+          "测试 status: failed",
+          "测试 failure: ImportError while loading conftest '/mnt/d/vbox/repos/vllm_upstream/tests/conftest.py'. tests/conftest.py:7: in <module>     from tblib import pickling_support E   ModuleNotFoundError: No module named 'tblib'",
+          "documented commands: docs/contributing/incremental_build.md: CMakeCache.txt  ctest                    _flashmla_C.abi3.so                  moe_marlin_generation.log; docs/contributing/README.md: uv pip install pytest pytest-asyncio; docs/contributing/README.md: pytest tests/"
+        ],
+        "recommendation": "补全构建、测试、代码检测前的依赖安装步骤，确保文档里的命令能在新环境直接跑通。"
+      },
+      {
+        "category": "environment_network_blocker",
+        "root_cause": "environment",
+        "severity": "medium",
+        "summary": "代码检测 阶段受到网络、镜像源或外部站点波动影响",
+        "evidence": [
+          "代码检测 command: /mnt/d/vbox/repos/repo_dev_eval_agent/.work/docprobe/vllm/.venv/bin/pre-commit run -a",
+          "代码检测 status: failed",
+          "代码检测 failure: [INFO] Installing environment for https://github.com/rhysd/actionlint. [INFO] Once installed this environment will be reused. [INFO] This may take a few minutes... An unexpected error has occurred: URLError: <urlopen error [SSL: UNEXPECTED_",
+          "documented commands: docs/contributing/README.md: uv pip install pre-commit; docs/contributing/README.md: pre-commit install; docs/contributing/README.md: pre-commit run     # runs on staged files"
+        ],
+        "recommendation": "在文档中补充代理、镜像源和重试建议，并在 CI 中缓存依赖、测试数据或 pre-commit hook 环境。"
+      }
+    ],
+    "ai_summary": {
+      "provider": "",
+      "status": "disabled",
+      "summary": "",
+      "command": "",
+      "stderr_excerpt": ""
+    },
+    "errors": []
+  },
+  {
+    "repo": "Ascend/MindIE-SD",
+    "local_path": "D:\\vbox\\repos\\MindIE-SD",
+    "static": {
+      "style_defined": false,
+      "style_evidence": [],
+      "code_check_supported": true,
+      "check_tools": [
+        "requirements.txt:pre-commit",
+        "tests\\run_UT_test.sh:test-script",
+        "tests\\run_test.sh:test-script"
+      ],
+      "rule_count_estimate": 0,
+      "rule_count_details": [],
+      "auto_fix_supported": false,
+      "auto_fix_evidence": [],
+      "ai_review_signals": [],
+      "inferred_build_command": "bash build/build.sh",
+      "inferred_unit_test_command": "bash tests/run_UT_test.sh",
+      "inferred_code_check_command": "",
+      "inference_evidence": [
+        "container strategy: docker_documented",
+        "container environment note: docker is documented, but no runnable container definition was found",
+        "markdown scanned: 43 files",
+        "build/build.sh detected",
+        "tests/run_UT_test.sh detected"
+      ],
+      "container_environment": {
+        "defined": true,
+        "runnable_definition_present": false,
+        "preferred_strategy": "docker_documented",
+        "dockerfiles": [],
+        "compose_files": [],
+        "devcontainer_files": [],
+        "reference_files": [
+          "docker/README.md"
+        ],
+        "base_images": [],
+        "workflow_images": [],
+        "requires_gpu": false,
+        "setup_supported_locally": false,
+        "setup_evidence": [
+          "docker-doc:docker/README.md",
+          "docker cli available",
+          "docker daemon 29.2.0",
+          "docker nvidia runtime available"
+        ],
+        "setup_blockers": [
+          "repository mentions Docker but does not provide a runnable Dockerfile, compose file, devcontainer, or workflow container image"
+        ],
+        "inferred_setup_command": "",
+        "runtime": {
+          "engine": "docker",
+          "cli_available": true,
+          "daemon_available": true,
+          "server_version": "29.2.0",
+          "nvidia_runtime_available": true,
+          "evidence": [
+            "docker cli available",
+            "docker daemon 29.2.0",
+            "docker nvidia runtime available"
+          ]
+        },
+        "note": "docker is documented, but no runnable container definition was found"
+      },
+      "documentation": {
+        "markdown_files_scanned": 43,
+        "relevant_files": [
+          "docker/README.md",
+          "docs/developer_guide.md",
+          "examples/cache/README.md",
+          "examples/service/service.md",
+          "README.md",
+          "SECURITY.md",
+          "origin/master:README.md",
+          "origin/master:SECURITY.md",
+          "origin/master:docker/README.md",
+          "origin/master:docs/zh/developer_guide.md",
+          "origin/master:examples/cache/README.md",
+          "origin/master:examples/service/service.md"
+        ],
+        "commands": [
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "container",
+            "command": "docker run -it -d --net=host --shm-size=1g \\\n--name <container-name> \\\n--device=/dev/davinci_manager:rwm \\\n--device=/dev/hisi_hdc:rwm \\\n--device=/dev/devmm_svm:rwm \\\n--device=/dev/davinci0:rwm \\\n-v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \\\n-v /usr/local/Ascend/firmware/:/usr/local/Ascend/firmware:ro \\\n-v /usr/local/sbin:/usr/local/sbin:ro \\\n-v /path-to-weights:/path-to-weights:ro \\\nmindie:2.2.RC1-800I-A2-py311-openeuler24.03-lts bash"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "container",
+            "command": "docker images"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "container",
+            "command": "docker exec -it <container-name> bash"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "build",
+            "command": "python setup.py bdist_wheel"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install wheel"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install mindiesd-*.whl"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "build",
+            "command": "pip install -e ."
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install -e ."
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install -r MindIE-SD/requirements.txt"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "install",
+            "command": "pip install coverage"
+          },
+          {
+            "source_file": "docs/developer_guide.md",
+            "category": "test",
+            "command": "bash run_test.sh"
+          },
+          {
+            "source_file": "examples/cache/README.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "examples/service/service.md",
+            "category": "install",
+            "command": "pip install ray"
+          },
+          {
+            "source_file": "examples/service/service.md",
+            "category": "install",
+            "command": "pip install uvicorn"
+          },
+          {
+            "source_file": "README.md",
+            "category": "build",
+            "command": "python setup.py bdist_wheel"
+          },
+          {
+            "source_file": "README.md",
+            "category": "install",
+            "command": "pip install mindiesd-*.whl"
+          },
+          {
+            "source_file": "README.md",
+            "category": "install",
+            "command": "pip install --trusted-host ascend.devcloud.huaweicloud.com -i https://ascend.devcloud.huaweicloud.com/pypi/simple/ mindiesd"
+          },
+          {
+            "source_file": "README.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "SECURITY.md",
+            "category": "build",
+            "command": "make -j$(nproc)"
+          },
+          {
+            "source_file": "SECURITY.md",
+            "category": "build",
+            "command": "sudo make install"
+          },
+          {
+            "source_file": "SECURITY.md",
+            "category": "install",
+            "command": "pip install --ignore-installed torch-2.1.0a0+git7bcf7da-cp311-cp311-linux_aarch.whl"
+          },
+          {
+            "source_file": "SECURITY.md",
+            "category": "build",
+            "command": "cmake .. -USE_TCP_OPENSSL_LOAD=ON"
+          },
+          {
+            "source_file": "SECURITY.md",
+            "category": "build",
+            "command": "make -j&(nproc)"
+          },
+          {
+            "source_file": "origin/master:README.md",
+            "category": "build",
+            "command": "python setup.py bdist_wheel"
+          },
+          {
+            "source_file": "origin/master:README.md",
+            "category": "install",
+            "command": "pip install mindiesd-*.whl"
+          },
+          {
+            "source_file": "origin/master:README.md",
+            "category": "install",
+            "command": "pip install --trusted-host ascend.devcloud.huaweicloud.com -i https://ascend.devcloud.huaweicloud.com/pypi/simple/ mindiesd"
+          },
+          {
+            "source_file": "origin/master:README.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "origin/master:SECURITY.md",
+            "category": "build",
+            "command": "make -j$(nproc)"
+          },
+          {
+            "source_file": "origin/master:SECURITY.md",
+            "category": "build",
+            "command": "sudo make install"
+          },
+          {
+            "source_file": "origin/master:SECURITY.md",
+            "category": "install",
+            "command": "pip install --ignore-installed torch-2.1.0a0+git7bcf7da-cp311-cp311-linux_aarch.whl"
+          },
+          {
+            "source_file": "origin/master:SECURITY.md",
+            "category": "build",
+            "command": "cmake .. -USE_TCP_OPENSSL_LOAD=ON"
+          },
+          {
+            "source_file": "origin/master:SECURITY.md",
+            "category": "build",
+            "command": "make -j&(nproc)"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "container",
+            "command": "docker run -it -d --net=host --shm-size=1g \\\n--name <container-name> \\\n--device=/dev/davinci_manager:rwm \\\n--device=/dev/hisi_hdc:rwm \\\n--device=/dev/devmm_svm:rwm \\\n--device=/dev/davinci0:rwm \\\n-v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \\\n-v /usr/local/Ascend/firmware/:/usr/local/Ascend/firmware:ro \\\n-v /usr/local/sbin:/usr/local/sbin:ro \\\n-v /path-to-weights:/path-to-weights:ro \\\nmindie:2.2.RC1-800I-A2-py311-openeuler24.03-lts bash"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "container",
+            "command": "docker images"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "container",
+            "command": "docker exec -it <container-name> bash"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "build",
+            "command": "python setup.py bdist_wheel"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install wheel"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install mindiesd-*.whl"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "build",
+            "command": "pip install -e ."
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install -e ."
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install -r MindIE-SD/requirements.txt"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "install",
+            "command": "pip install coverage"
+          },
+          {
+            "source_file": "origin/master:docs/zh/developer_guide.md",
+            "category": "test",
+            "command": "bash run_test.sh"
+          },
+          {
+            "source_file": "origin/master:examples/cache/README.md",
+            "category": "install",
+            "command": "pip install -r requirements.txt"
+          },
+          {
+            "source_file": "origin/master:examples/service/service.md",
+            "category": "install",
+            "command": "pip install fastapi"
+          },
+          {
+            "source_file": "origin/master:examples/service/service.md",
+            "category": "install",
+            "command": "pip install ray"
+          },
+          {
+            "source_file": "origin/master:examples/service/service.md",
+            "category": "install",
+            "command": "pip install uvicorn"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "incremental_build": {
+      "status": "failed",
+      "command": "python3 setup.py bdist_wheel",
+      "duration_sec": 0.3225924000144005,
+      "returncode": 1,
+      "stdout_excerpt": "./build.sh: line 12: $'\\r': command not found ./build.sh: line 13: set: - : invalid option set: usage: set [-abefhkmnptuvxBCEHPT] [-o option-name] [--] [-] [arg ...] chmod: cannot access '/mnt/d/vbox/repos/MindIE-SD/build'$'\\r''/*'$'\\r': No such file or directory ./build.sh: line 17: $'\\r': command not found ./build.sh: line 18: cd: $'/mnt/d/vbox/repos/MindIE-SD/build\\r/..\\r\\r': No such file or di",
+      "stderr_excerpt": "INFO:root:running bdist_wheel INFO:root:running build INFO:root:running build_py INFO:root:>>> Running build.sh to compile shared libraries... ERROR:root:Build script failed with return code 2 ERROR:root:Build script output: None Traceback (most recent call last):   File \"/mnt/d/vbox/repos/MindIE-SD/setup.py\", line 78, in run     subprocess.check_call(   File \"/usr/lib/python3.12/subprocess.py\", l"
+    },
+    "unit_test": {
+      "status": "failed",
+      "command": "python3 -m pip install -r requirements.txt && python3 -m pip install coverage && cd tests && bash run_test.sh",
+      "duration_sec": 0.27386460010893643,
+      "returncode": 1,
+      "stdout_excerpt": "",
+      "stderr_excerpt": "error: externally-managed-environment  × This environment is externally managed ╰─> To install Python packages system-wide, try apt install     python3-xyz, where xyz is the package you are trying to     install.          If you wish to install a non-Debian-packaged Python package,     create a virtual environment using python3 -m venv path/to/venv.     Then use path/to/venv/bin/python and path/to"
+    },
+    "code_check": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "pr_metrics": {
+      "remote_platform": "gitcode",
+      "pr_window_days": 30,
+      "window_start": "2026-02-22T16:21:52.639009+00:00",
+      "window_end": "2026-03-24T16:21:52.639009+00:00",
+      "sampled_pull_count": 0,
+      "workflow_run_count": 0,
+      "latest_duration_sec": null,
+      "median_duration_sec": null,
+      "average_duration_sec": null,
+      "estimated_cpu_core_minutes": null,
+      "estimated_npu_card_minutes": null,
+      "actual_cpu_seconds": null,
+      "actual_npu_seconds": null,
+      "ai_review_supported": false,
+      "ai_review_evidence": [],
+      "workflow_run_evidence": [],
+      "collection_note": "GitCode AI review detection requires a private token; set GITCODE_TOKEN to inspect PR comments"
+    },
+    "documentation_issues": [
+      {
+        "category": "missing_code_check_docs",
+        "root_cause": "documentation",
+        "severity": "medium",
+        "summary": "仓库支持代码检测，但 Markdown 没有给出 lint / pre-commit 执行说明",
+        "evidence": [
+          "requirements.txt:pre-commit",
+          "tests\\run_UT_test.sh:test-script",
+          "tests\\run_test.sh:test-script"
+        ],
+        "recommendation": "补充代码检测章节，至少说明 lint 命令、自动修复命令和常见失败排查路径。"
+      },
+      {
+        "category": "container_docs_not_self_contained",
+        "root_cause": "documentation",
+        "severity": "high",
+        "summary": "Markdown 提到了容器路径，但仓库内没有可直接复现的容器定义",
+        "evidence": [
+          "docker/README.md",
+          "repository mentions Docker but does not provide a runnable Dockerfile, compose file, devcontainer, or workflow container image"
+        ],
+        "recommendation": "补充可直接执行的 `docker pull`、`docker load` 或 `docker build` 命令，或者在仓库内提供 Dockerfile / compose / devcontainer。"
+      },
+      {
+        "category": "repository_script_issue",
+        "root_cause": "repository",
+        "severity": "high",
+        "summary": "构建 失败根因在仓库脚本内容或 CRLF/LF 行尾格式，不是 Markdown 描述不清",
+        "evidence": [
+          "构建 command: python3 setup.py bdist_wheel",
+          "构建 status: failed",
+          "构建 failure: INFO:root:running bdist_wheel INFO:root:running build INFO:root:running build_py INFO:root:>>> Running build.sh to compile shared libraries... ERROR:root:Build script failed with return code 2 ERROR:root:Build script output: None Traceback ",
+          "documented commands: docs/developer_guide.md: python setup.py bdist_wheel; docs/developer_guide.md: pip install -e .; README.md: python setup.py bdist_wheel"
+        ],
+        "recommendation": "修复脚本为 LF 行尾，并用 `.gitattributes` 固化 shell 脚本换行格式；再加一条 CI 烟测保障。"
+      },
+      {
+        "category": "execution_failure_needs_manual_triage",
+        "root_cause": "mixed",
+        "severity": "medium",
+        "summary": "测试 命令执行失败，需要继续区分是文档漂移还是仓库行为变化",
+        "evidence": [
+          "测试 command: python3 -m pip install -r requirements.txt && python3 -m pip install coverage && cd tests && bash run_test.sh",
+          "测试 status: failed",
+          "测试 failure: error: externally-managed-environment  × This environment is externally managed ╰─> To install Python packages system-wide, try apt install     python3-xyz, where xyz is the package you are trying to     install.          If you wish to ins",
+          "documented commands: docs/developer_guide.md: bash run_test.sh; origin/master:docs/zh/developer_guide.md: bash run_test.sh"
+        ],
+        "recommendation": "复核文档示例、依赖锁定和仓库脚本是否一致，并为该命令补一条 CI 烟测。"
+      }
+    ],
+    "ai_summary": {
+      "provider": "",
+      "status": "disabled",
+      "summary": "",
+      "command": "",
+      "stderr_excerpt": ""
+    },
+    "errors": []
+  }
+]

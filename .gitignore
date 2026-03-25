@@ -5,7 +5,9 @@ __pycache__/
 .work_gitcode_pr_215.html
 .work_github_pr_37969.html
 config/repo_eval.real.yaml
-reports/
+reports/*
+!reports/samples/
+!reports/samples/**
 *.pyc
 *.pyo
 *.pyd

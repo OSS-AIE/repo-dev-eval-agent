@@ -1,0 +1,619 @@
+[
+  {
+    "repo": "Ascend/memcache",
+    "local_path": "D:\\vbox\\repos\\repo_dev_eval_agent\\.work\\eval_xlsx_smoke\\Ascend__memcache",
+    "static": {
+      "style_defined": true,
+      "style_evidence": [
+        ".clang-format"
+      ],
+      "code_check_supported": false,
+      "check_tools": [],
+      "rule_count_estimate": 0,
+      "rule_count_details": [],
+      "auto_fix_supported": false,
+      "auto_fix_evidence": [],
+      "ai_review_signals": [],
+      "inferred_build_command": "make -C build",
+      "inferred_unit_test_command": "",
+      "inferred_code_check_command": "",
+      "inference_evidence": [
+        "markdown scanned: 34 files",
+        "documented build command: example/cpp/README.md"
+      ],
+      "container_environment": {
+        "defined": false,
+        "runnable_definition_present": false,
+        "preferred_strategy": "host",
+        "dockerfiles": [],
+        "compose_files": [],
+        "devcontainer_files": [],
+        "reference_files": [],
+        "base_images": [],
+        "workflow_images": [],
+        "requires_gpu": false,
+        "setup_supported_locally": false,
+        "setup_evidence": [
+          "docker cli available",
+          "docker daemon 29.2.0",
+          "docker nvidia runtime available"
+        ],
+        "setup_blockers": [],
+        "inferred_setup_command": "",
+        "runtime": {
+          "engine": "docker",
+          "cli_available": true,
+          "daemon_available": true,
+          "server_version": "29.2.0",
+          "nvidia_runtime_available": true,
+          "evidence": [
+            "docker cli available",
+            "docker daemon 29.2.0",
+            "docker nvidia runtime available"
+          ]
+        },
+        "note": "repository does not define Docker/devcontainer environment"
+      },
+      "documentation": {
+        "markdown_files_scanned": 34,
+        "relevant_files": [
+          "doc/build.md",
+          "doc/memcache_metaservice_HA.md",
+          "example/benchmark/README.md",
+          "example/cpp/README.md",
+          "example/python/README.md",
+          "origin/master:doc/build.md",
+          "origin/master:doc/memcache_metaservice_HA.md",
+          "origin/master:example/benchmark/README.md",
+          "origin/master:example/cpp/README.md",
+          "origin/master:example/python/README.md"
+        ],
+        "commands": [
+          {
+            "source_file": "doc/memcache_metaservice_HA.md",
+            "category": "container",
+            "command": "docker save my-image:latest -o my-image.tar"
+          },
+          {
+            "source_file": "example/cpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "example/cpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memcache_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "example/cpp/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "example/cpp/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "example/python/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "example/python/README.md",
+            "category": "install",
+            "command": "source /usr/local/memcache_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:doc/memcache_metaservice_HA.md",
+            "category": "container",
+            "command": "docker save my-image:latest -o my-image.tar"
+          },
+          {
+            "source_file": "origin/master:example/cpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:example/cpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memcache_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:example/cpp/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "origin/master:example/cpp/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "origin/master:example/python/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:example/python/README.md",
+            "category": "install",
+            "command": "source /usr/local/memcache_hybrid/set_env.sh"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "incremental_build": {
+      "status": "disabled",
+      "command": "make -C build",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "unit_test": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "code_check": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "pr_metrics": {
+      "remote_platform": "gitcode",
+      "pr_window_days": 30,
+      "window_start": "2026-02-22T16:24:36.047054+00:00",
+      "window_end": "2026-03-24T16:24:36.047054+00:00",
+      "sampled_pull_count": 0,
+      "workflow_run_count": 0,
+      "latest_duration_sec": null,
+      "median_duration_sec": null,
+      "average_duration_sec": null,
+      "estimated_cpu_core_minutes": null,
+      "estimated_npu_card_minutes": null,
+      "actual_cpu_seconds": null,
+      "actual_npu_seconds": null,
+      "ai_review_supported": false,
+      "ai_review_evidence": [],
+      "workflow_run_evidence": [],
+      "collection_note": "GitCode AI review detection requires a private token; set GITCODE_TOKEN to inspect PR comments"
+    },
+    "documentation_issues": [
+      {
+        "category": "container_docs_not_self_contained",
+        "root_cause": "documentation",
+        "severity": "high",
+        "summary": "Markdown 提到了容器路径，但仓库内没有可直接复现的容器定义",
+        "evidence": [],
+        "recommendation": "补充可直接执行的 `docker pull`、`docker load` 或 `docker build` 命令，或者在仓库内提供 Dockerfile / compose / devcontainer。"
+      }
+    ],
+    "ai_summary": {
+      "provider": "codex",
+      "status": "disabled",
+      "summary": "",
+      "command": "",
+      "stderr_excerpt": ""
+    },
+    "errors": []
+  },
+  {
+    "repo": "Ascend/memfabric_hybrid",
+    "local_path": "D:\\vbox\\repos\\repo_dev_eval_agent\\.work\\eval_xlsx_smoke\\Ascend__memfabric_hybrid",
+    "static": {
+      "style_defined": true,
+      "style_evidence": [
+        ".clang-format"
+      ],
+      "code_check_supported": false,
+      "check_tools": [],
+      "rule_count_estimate": 0,
+      "rule_count_details": [],
+      "auto_fix_supported": false,
+      "auto_fix_evidence": [],
+      "ai_review_signals": [],
+      "inferred_build_command": "make -C build",
+      "inferred_unit_test_command": "",
+      "inferred_code_check_command": "",
+      "inference_evidence": [
+        "markdown scanned: 58 files",
+        "documented build command: example/bm/BmBenchmark/README.md"
+      ],
+      "container_environment": {
+        "defined": false,
+        "runnable_definition_present": false,
+        "preferred_strategy": "host",
+        "dockerfiles": [],
+        "compose_files": [],
+        "devcontainer_files": [],
+        "reference_files": [],
+        "base_images": [],
+        "workflow_images": [],
+        "requires_gpu": false,
+        "setup_supported_locally": false,
+        "setup_evidence": [
+          "docker cli available",
+          "docker daemon 29.2.0",
+          "docker nvidia runtime available"
+        ],
+        "setup_blockers": [],
+        "inferred_setup_command": "",
+        "runtime": {
+          "engine": "docker",
+          "cli_available": true,
+          "daemon_available": true,
+          "server_version": "29.2.0",
+          "nvidia_runtime_available": true,
+          "evidence": [
+            "docker cli available",
+            "docker daemon 29.2.0",
+            "docker nvidia runtime available"
+          ]
+        },
+        "note": "repository does not define Docker/devcontainer environment"
+      },
+      "documentation": {
+        "markdown_files_scanned": 58,
+        "relevant_files": [
+          "doc/installation.md",
+          "doc/SECURITYNOTE.md",
+          "example/bm/BmBenchmark/README.md",
+          "example/bm/BmCpp/README.md",
+          "example/config_store/README.md",
+          "example/shm/AllReduce/README.md",
+          "example/shm/RDMADemo/README.md",
+          "example/shm/ShiftPutGet/README.md",
+          "example/trans/perf/README.md",
+          "README.md",
+          "script/run_ut.md",
+          "src/hybm/csrc/driver/npu_direct_rdma/README.md",
+          "origin/master:README.md",
+          "origin/master:doc/SECURITYNOTE.md",
+          "origin/master:doc/installation.md",
+          "origin/master:example/bm/BmBenchmark/README.md",
+          "origin/master:example/bm/BmCpp/README.md",
+          "origin/master:example/config_store/README.md",
+          "origin/master:example/shm/AllReduce/README.md",
+          "origin/master:example/shm/RDMADemo/README.md",
+          "origin/master:example/shm/ShiftPutGet/README.md",
+          "origin/master:example/trans/perf/README.md",
+          "origin/master:script/run_ut.md",
+          "origin/master:src/hybm/csrc/driver/npu_direct_rdma/README.md"
+        ],
+        "commands": [
+          {
+            "source_file": "example/bm/BmBenchmark/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "example/bm/BmBenchmark/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "example/bm/BmBenchmark/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "example/bm/BmCpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "example/bm/BmCpp/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "example/bm/BmCpp/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "example/config_store/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "example/config_store/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "example/trans/perf/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "example/trans/perf/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmBenchmark/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmBenchmark/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmBenchmark/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmCpp/README.md",
+            "category": "install",
+            "command": "source /usr/local/memfabric_hybrid/set_env.sh"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmCpp/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "origin/master:example/bm/BmCpp/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "origin/master:example/config_store/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "origin/master:example/config_store/README.md",
+            "category": "build",
+            "command": "make -C build"
+          },
+          {
+            "source_file": "origin/master:example/trans/perf/README.md",
+            "category": "build",
+            "command": "cmake . -B build"
+          },
+          {
+            "source_file": "origin/master:example/trans/perf/README.md",
+            "category": "build",
+            "command": "make -C build"
+          }
+        ],
+        "notes": []
+      }
+    },
+    "incremental_build": {
+      "status": "disabled",
+      "command": "make -C build",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "unit_test": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "code_check": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "pr_metrics": {
+      "remote_platform": "gitcode",
+      "pr_window_days": 30,
+      "window_start": "2026-02-22T16:24:39.637046+00:00",
+      "window_end": "2026-03-24T16:24:39.637046+00:00",
+      "sampled_pull_count": 0,
+      "workflow_run_count": 0,
+      "latest_duration_sec": null,
+      "median_duration_sec": null,
+      "average_duration_sec": null,
+      "estimated_cpu_core_minutes": null,
+      "estimated_npu_card_minutes": null,
+      "actual_cpu_seconds": null,
+      "actual_npu_seconds": null,
+      "ai_review_supported": false,
+      "ai_review_evidence": [],
+      "workflow_run_evidence": [],
+      "collection_note": "GitCode AI review detection requires a private token; set GITCODE_TOKEN to inspect PR comments"
+    },
+    "documentation_issues": [],
+    "ai_summary": {
+      "provider": "codex",
+      "status": "disabled",
+      "summary": "",
+      "command": "",
+      "stderr_excerpt": ""
+    },
+    "errors": []
+  },
+  {
+    "repo": "sgl-project/sgl-kernel-npu",
+    "local_path": "D:\\vbox\\repos\\repo_dev_eval_agent\\.work\\eval_xlsx_smoke\\sgl-project__sgl-kernel-npu",
+    "static": {
+      "style_defined": false,
+      "style_evidence": [],
+      "code_check_supported": false,
+      "check_tools": [],
+      "rule_count_estimate": 0,
+      "rule_count_details": [],
+      "auto_fix_supported": false,
+      "auto_fix_evidence": [],
+      "ai_review_signals": [],
+      "inferred_build_command": "",
+      "inferred_unit_test_command": "",
+      "inferred_code_check_command": "",
+      "inference_evidence": [],
+      "container_environment": {
+        "defined": false,
+        "runnable_definition_present": false,
+        "preferred_strategy": "host",
+        "dockerfiles": [],
+        "compose_files": [],
+        "devcontainer_files": [],
+        "reference_files": [],
+        "base_images": [],
+        "workflow_images": [],
+        "requires_gpu": false,
+        "setup_supported_locally": false,
+        "setup_evidence": [
+          "docker cli available",
+          "docker daemon 29.2.0",
+          "docker nvidia runtime available"
+        ],
+        "setup_blockers": [],
+        "inferred_setup_command": "",
+        "runtime": {
+          "engine": "docker",
+          "cli_available": true,
+          "daemon_available": true,
+          "server_version": "29.2.0",
+          "nvidia_runtime_available": true,
+          "evidence": [
+            "docker cli available",
+            "docker daemon 29.2.0",
+            "docker nvidia runtime available"
+          ]
+        },
+        "note": "repository does not define Docker/devcontainer environment"
+      },
+      "documentation": {
+        "markdown_files_scanned": 0,
+        "relevant_files": [],
+        "commands": [],
+        "notes": []
+      }
+    },
+    "incremental_build": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "unit_test": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "code_check": {
+      "status": "not_configured",
+      "command": "",
+      "duration_sec": null,
+      "returncode": null,
+      "stdout_excerpt": "",
+      "stderr_excerpt": ""
+    },
+    "pr_metrics": {
+      "remote_platform": "github",
+      "pr_window_days": 30,
+      "window_start": "2026-02-22T16:25:40.423859+00:00",
+      "window_end": "2026-03-24T16:25:40.423859+00:00",
+      "sampled_pull_count": 20,
+      "workflow_run_count": 20,
+      "latest_duration_sec": 0.0,
+      "median_duration_sec": 0.0,
+      "average_duration_sec": 858.7,
+      "estimated_cpu_core_minutes": 15.33333333333333,
+      "estimated_npu_card_minutes": null,
+      "actual_cpu_seconds": null,
+      "actual_npu_seconds": null,
+      "ai_review_supported": true,
+      "ai_review_evidence": [
+        "pr#406 review by gemini-code-assist[bot]",
+        "pr#406 comment by gemini-code-assist[bot]",
+        "pr#381 review by gemini-code-assist[bot]",
+        "pr#381 comment by gemini-code-assist[bot]",
+        "pr#399 review by gemini-code-assist[bot]",
+        "pr#399 comment by gemini-code-assist[bot]",
+        "pr#407 comment by gemini-code-assist[bot]",
+        "pr#401 review by gemini-code-assist[bot]",
+        "pr#401 comment by gemini-code-assist[bot]",
+        "pr#405 review by gemini-code-assist[bot]",
+        "pr#405 comment by gemini-code-assist[bot]",
+        "pr#404 review by gemini-code-assist[bot]",
+        "pr#404 comment by gemini-code-assist[bot]",
+        "pr#384 review by gemini-code-assist[bot]",
+        "pr#384 comment by gemini-code-assist[bot]",
+        "pr#403 review by gemini-code-assist[bot]",
+        "pr#403 comment by gemini-code-assist[bot]",
+        "pr#278 comment by gemini-code-assist[bot]",
+        "pr#402 review by gemini-code-assist[bot]",
+        "pr#402 comment by gemini-code-assist[bot]",
+        "pr#268 review by gemini-code-assist[bot]",
+        "pr#268 comment by gemini-code-assist[bot]",
+        "pr#366 review by gemini-code-assist[bot]",
+        "pr#366 comment by gemini-code-assist[bot]",
+        "pr#394 review by gemini-code-assist[bot]",
+        "pr#394 comment by gemini-code-assist[bot]",
+        "pr#400 review by gemini-code-assist[bot]",
+        "pr#400 comment by gemini-code-assist[bot]",
+        "pr#397 comment by gemini-code-assist[bot]",
+        "pr#398 comment by gemini-code-assist[bot]",
+        "pr#393 review by gemini-code-assist[bot]",
+        "pr#393 comment by gemini-code-assist[bot]",
+        "pr#396 review by gemini-code-assist[bot]",
+        "pr#396 comment by gemini-code-assist[bot]",
+        "pr#389 review by gemini-code-assist[bot]",
+        "pr#389 comment by gemini-code-assist[bot]"
+      ],
+      "workflow_run_evidence": [
+        "run:23477077508 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23477077515 Lint pull_request",
+        "run:23475876449 Lint pull_request",
+        "run:23475876448 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23468733092 Lint pull_request",
+        "run:23468733095 Build and Release SGL-Kernel-NPU pull_request",
+        "run:23468733104 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23468521305 Build and Release SGL-Kernel-NPU pull_request",
+        "run:23468521311 Lint pull_request",
+        "run:23468521331 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23434481589 Lint pull_request",
+        "run:23434481591 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23434261023 Lint pull_request",
+        "run:23434261006 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23433935801 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23433935777 Lint pull_request",
+        "run:23424605854 Lint pull_request",
+        "run:23424605865 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request",
+        "run:23417713879 Lint pull_request",
+        "run:23417713886 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request"
+      ],
+      "collection_note": "collected from GitHub Actions and PR APIs within the last 30 days"
+    },
+    "documentation_issues": [],
+    "ai_summary": {
+      "provider": "codex",
+      "status": "disabled",
+      "summary": "",
+      "command": "",
+      "stderr_excerpt": ""
+    },
+    "errors": [
+      "failed to clone/fetch repo: Cloning into 'D:\\vbox\\repos\\repo_dev_eval_agent\\.work\\eval_xlsx_smoke\\sgl-project__sgl-kernel-npu'...\nfatal: unable to access 'https://github.com/sgl-project/sgl-kernel-npu.git/': Failed to connect to github.com port 443 after 21084 ms: Could not connect to server"
+    ]
+  }
+]

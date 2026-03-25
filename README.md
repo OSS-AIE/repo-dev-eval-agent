@@ -99,6 +99,15 @@ HTML report behavior:
 - one tab per repository for detailed findings
 - suitable for sharing as a single-file report artifact
 
+Tracked sample reports:
+
+- `reports/samples/sample-vllm.md`
+- `reports/samples/sample-vllm.html`
+- `reports/samples/real-focus.md`
+- `reports/samples/real-focus.html`
+- `reports/samples/openlibing-smoke.md`
+- `reports/samples/openlibing-smoke.html`
+
 Optional AI summary adapter:
 
 - the adapter is configurable and not hard-coded to Codex

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>开源代码仓开发体验评估报告</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --panel: #fffdf8;
+      --ink: #1e2724;
+      --muted: #5a665f;
+      --accent: #186a5b;
+      --accent-soft: #dceee7;
+      --border: #d8d2c8;
+      --ok: #1f7a4d;
+      --warn: #b96d00;
+      --bad: #b42318;
+      --disabled: #667085;
+      --shadow: 0 18px 40px rgba(24, 34, 33, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #f7dfc5 0, transparent 26%),
+        radial-gradient(circle at top right, #d4ebe2 0, transparent 30%),
+        var(--bg);
+    }
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric, .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .metric {
+      padding: 18px 20px;
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .section {
+      margin-top: 24px;
+    }
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #f8f4ec;
+      font-weight: 700;
+    }
+    .repo-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+    .repo-tab {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--muted);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 160ms ease;
+      font-weight: 600;
+    }
+    .repo-tab.active {
+      color: white;
+      background: linear-gradient(135deg, #1d6f5f, #0f4f43);
+      border-color: transparent;
+    }
+    .repo-panel {
+      display: none;
+    }
+    .repo-panel.active {
+      display: block;
+      animation: fadeIn 180ms ease;
+    }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .card {
+      padding: 18px 18px 8px;
+    }
+    .card h3 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(216, 210, 200, 0.65);
+    }
+    .kv:first-of-type {
+      border-top: 0;
+    }
+    .k {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .v {
+      min-width: 0;
+      word-break: break-word;
+    }
+    ul {
+      margin: 6px 0 0 18px;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    code {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      background: #f2eee6;
+      padding: 2px 5px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    .status.ok { background: #dcfae6; color: var(--ok); }
+    .status.failed, .status.error { background: #fde7e7; color: var(--bad); }
+    .status.timeout { background: #fff1d6; color: var(--warn); }
+    .status.disabled { background: #eceff3; color: var(--disabled); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 900px) {
+      .page { padding: 20px 14px 28px; }
+      h1 { font-size: 28px; }
+      .kv { grid-template-columns: 1fr; gap: 4px; }
+      th, td { font-size: 13px; padding: 10px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>开源代码仓开发体验评估报告</h1>
+    <div class="subtitle">汇总本地编码、构建、测试、代码检测、容器环境与 PR 流水线指标。</div>
+
+    <div class="metrics"><div class="metric"><div class="metric-label">仓库数</div><div class="metric-value">3</div></div><div class="metric"><div class="metric-label">定义编码风格</div><div class="metric-value">2</div></div><div class="metric"><div class="metric-label">支持代码检测</div><div class="metric-value">0</div></div><div class="metric"><div class="metric-label">容器可本地搭建</div><div class="metric-value">0</div></div><div class="metric"><div class="metric-label">文档问题条数</div><div class="metric-value">1</div></div></div>
+
+    <section class="section">
+      <h2 class="section-title">仓库汇总</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>仓库</th>
+            <th>编码风格</th>
+            <th>代码检测</th>
+            <th>容器定义</th>
+            <th>容器可搭建</th>
+            <th>构建时间</th>
+            <th>检测时间</th>
+            <th>UT 时间</th>
+            <th>规则数</th>
+            <th>自动修复</th>
+            <th>AI 代码检视</th>
+            <th>PR 平均时长</th>
+            <th>PR 资源</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Ascend/memcache</td><td>是</td><td>否</td><td>否</td><td>否</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>否</td><td>否</td><td>N/A</td><td>CPU: N/A; NPU: N/A</td></tr>
+<tr><td>Ascend/memfabric_hybrid</td><td>是</td><td>否</td><td>否</td><td>否</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>否</td><td>否</td><td>N/A</td><td>CPU: N/A; NPU: N/A</td></tr>
+<tr><td>sgl-project/sgl-kernel-npu</td><td>否</td><td>否</td><td>否</td><td>否</td><td>N/A</td><td>N/A</td><td>N/A</td><td>N/A</td><td>否</td><td>是</td><td>858.70s</td><td>CPU: 估算 15.33 core-min; NPU: N/A</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Markdown 改进建议总览</h2>
+      <table>
+        <thead>
+          <tr><th>分类</th><th>数量</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>container_docs_not_self_contained</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">仓库详情</h2>
+      <div class="repo-tabs"><button class="repo-tab active" onclick="showRepoTab(0)">Ascend/memcache</button><button class="repo-tab " onclick="showRepoTab(1)">Ascend/memfabric_hybrid</button><button class="repo-tab " onclick="showRepoTab(2)">sgl-project/sgl-kernel-npu</button></div>
+      
+<section class="repo-panel active" id="repo-panel-0">
+  <div class="panel-grid">
+    <div class="card">
+      <h3>概览</h3>
+      <div class="kv"><div class="k">仓库</div><div class="v">Ascend/memcache</div></div>
+      <div class="kv"><div class="k">本地路径</div><div class="v"><code>D:\vbox\repos\repo_dev_eval_agent\.work\eval_xlsx_smoke\Ascend__memcache</code></div></div>
+      <div class="kv"><div class="k">Markdown 扫描文件数</div><div class="v">34</div></div>
+      <div class="kv"><div class="k">编码风格是否定义</div><div class="v">是</div></div>
+      <div class="kv"><div class="k">代码检测是否支持</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">自动修复是否具备</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">容器环境</div><div class="v">否 / 否 / <code>host</code></div></div>
+      <div class="kv"><div class="k">规则数量估算</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>本地探测结果</h3>
+      <div class="kv"><div class="k">增量构建</div><div class="v"><span class="status disabled">未执行</span> <code>make -C build</code> (N/A)</div></div>
+      <div class="kv"><div class="k">代码检测</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">UT</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">构建失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">代码检测失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">UT 失败摘要</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>PR 流水线</h3>
+      <div class="kv"><div class="k">平台 / 时间窗</div><div class="v"><code>gitcode</code> / 最近 30 天</div></div>
+      <div class="kv"><div class="k">PR 采样 / Workflow</div><div class="v">0 / 0</div></div>
+      <div class="kv"><div class="k">PR 平均时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">PR 中位时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">最近一次 PR 时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">资源消耗</div><div class="v">CPU: N/A; NPU: N/A</div></div>
+      <div class="kv"><div class="k">PR 采集说明</div><div class="v">GitCode AI review detection requires a private token; set GITCODE_TOKEN to inspect PR comments</div></div>
+    </div>
+  </div>
+  <div class="panel-grid">
+    <div class="card">
+      <h3>文档与命令</h3>
+      <div class="kv"><div class="k">Markdown 相关文件</div><div class="v"><ul><li>doc/build.md</li><li>doc/memcache_metaservice_HA.md</li><li>example/benchmark/README.md</li><li>example/cpp/README.md</li><li>example/python/README.md</li><li>origin/master:doc/build.md</li><li>origin/master:doc/memcache_metaservice_HA.md</li><li>origin/master:example/benchmark/README.md</li><li>origin/master:example/cpp/README.md</li><li>origin/master:example/python/README.md</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的安装命令</div><div class="v"><ul><li>example/cpp/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>example/cpp/README.md: source /usr/local/memcache_hybrid/set_env.sh</li><li>example/python/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>example/python/README.md: source /usr/local/memcache_hybrid/set_env.sh</li><li>origin/master:example/cpp/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>origin/master:example/cpp/README.md: source /usr/local/memcache_hybrid/set_env.sh</li><li>origin/master:example/python/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>origin/master:example/python/README.md: source /usr/local/memcache_hybrid/set_env.sh</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的构建命令</div><div class="v"><ul><li>example/cpp/README.md: cmake . -B build</li><li>example/cpp/README.md: make -C build</li><li>origin/master:example/cpp/README.md: cmake . -B build</li><li>origin/master:example/cpp/README.md: make -C build</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的测试命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的代码检测命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的容器命令</div><div class="v"><ul><li>doc/memcache_metaservice_HA.md: docker save my-image:latest -o my-image.tar</li><li>origin/master:doc/memcache_metaservice_HA.md: docker save my-image:latest -o my-image.tar</li></ul></div></div>
+      <div class="kv"><div class="k">文档扫描备注</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">命令推断依据</div><div class="v"><ul><li>markdown scanned: 34 files</li><li>documented build command: example/cpp/README.md</li></ul></div></div>
+    </div>
+    <div class="card">
+      <h3>证据与改进建议</h3>
+      <div class="kv"><div class="k">编码风格证据</div><div class="v"><ul><li>.clang-format</li></ul></div></div>
+      <div class="kv"><div class="k">代码检测证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">自动修复证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">规则统计明细</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器定义文件</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器镜像线索</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器环境阻塞</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">AI 代码检视证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">PR Run 证据</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>Markdown 改进建议</h3>
+      <ul><li>[high/documentation/container_docs_not_self_contained] Markdown 提到了容器路径，但仓库内没有可直接复现的容器定义 | 证据: N/A | 建议: 补充可直接执行的 `docker pull`、`docker load` 或 `docker build` 命令，或者在仓库内提供 Dockerfile / compose / devcontainer。</li></ul>
+      <h3>错误</h3>
+      <ul><li>N/A</li></ul>
+      <div class="kv"><div class="k">AI 总结</div><div class="v">N/A</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="repo-panel " id="repo-panel-1">
+  <div class="panel-grid">
+    <div class="card">
+      <h3>概览</h3>
+      <div class="kv"><div class="k">仓库</div><div class="v">Ascend/memfabric_hybrid</div></div>
+      <div class="kv"><div class="k">本地路径</div><div class="v"><code>D:\vbox\repos\repo_dev_eval_agent\.work\eval_xlsx_smoke\Ascend__memfabric_hybrid</code></div></div>
+      <div class="kv"><div class="k">Markdown 扫描文件数</div><div class="v">58</div></div>
+      <div class="kv"><div class="k">编码风格是否定义</div><div class="v">是</div></div>
+      <div class="kv"><div class="k">代码检测是否支持</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">自动修复是否具备</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">容器环境</div><div class="v">否 / 否 / <code>host</code></div></div>
+      <div class="kv"><div class="k">规则数量估算</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>本地探测结果</h3>
+      <div class="kv"><div class="k">增量构建</div><div class="v"><span class="status disabled">未执行</span> <code>make -C build</code> (N/A)</div></div>
+      <div class="kv"><div class="k">代码检测</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">UT</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">构建失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">代码检测失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">UT 失败摘要</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>PR 流水线</h3>
+      <div class="kv"><div class="k">平台 / 时间窗</div><div class="v"><code>gitcode</code> / 最近 30 天</div></div>
+      <div class="kv"><div class="k">PR 采样 / Workflow</div><div class="v">0 / 0</div></div>
+      <div class="kv"><div class="k">PR 平均时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">PR 中位时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">最近一次 PR 时长</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">资源消耗</div><div class="v">CPU: N/A; NPU: N/A</div></div>
+      <div class="kv"><div class="k">PR 采集说明</div><div class="v">GitCode AI review detection requires a private token; set GITCODE_TOKEN to inspect PR comments</div></div>
+    </div>
+  </div>
+  <div class="panel-grid">
+    <div class="card">
+      <h3>文档与命令</h3>
+      <div class="kv"><div class="k">Markdown 相关文件</div><div class="v"><ul><li>doc/installation.md</li><li>doc/SECURITYNOTE.md</li><li>example/bm/BmBenchmark/README.md</li><li>example/bm/BmCpp/README.md</li><li>example/config_store/README.md</li><li>example/shm/AllReduce/README.md</li><li>example/shm/RDMADemo/README.md</li><li>example/shm/ShiftPutGet/README.md</li><li>example/trans/perf/README.md</li><li>README.md</li><li>script/run_ut.md</li><li>src/hybm/csrc/driver/npu_direct_rdma/README.md</li><li>origin/master:README.md</li><li>origin/master:doc/SECURITYNOTE.md</li><li>origin/master:doc/installation.md</li><li>origin/master:example/bm/BmBenchmark/README.md</li><li>origin/master:example/bm/BmCpp/README.md</li><li>origin/master:example/config_store/README.md</li><li>origin/master:example/shm/AllReduce/README.md</li><li>origin/master:example/shm/RDMADemo/README.md</li><li>origin/master:example/shm/ShiftPutGet/README.md</li><li>origin/master:example/trans/perf/README.md</li><li>origin/master:script/run_ut.md</li><li>origin/master:src/hybm/csrc/driver/npu_direct_rdma/README.md</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的安装命令</div><div class="v"><ul><li>example/bm/BmBenchmark/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>example/bm/BmCpp/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>origin/master:example/bm/BmBenchmark/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li><li>origin/master:example/bm/BmCpp/README.md: source /usr/local/memfabric_hybrid/set_env.sh</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的构建命令</div><div class="v"><ul><li>example/bm/BmBenchmark/README.md: cmake . -B build</li><li>example/bm/BmBenchmark/README.md: make -C build</li><li>example/bm/BmCpp/README.md: cmake . -B build</li><li>example/bm/BmCpp/README.md: make -C build</li><li>example/config_store/README.md: cmake . -B build</li><li>example/config_store/README.md: make -C build</li><li>example/trans/perf/README.md: cmake . -B build</li><li>example/trans/perf/README.md: make -C build</li><li>origin/master:example/bm/BmBenchmark/README.md: cmake . -B build</li><li>origin/master:example/bm/BmBenchmark/README.md: make -C build</li><li>origin/master:example/bm/BmCpp/README.md: cmake . -B build</li><li>origin/master:example/bm/BmCpp/README.md: make -C build</li><li>origin/master:example/config_store/README.md: cmake . -B build</li><li>origin/master:example/config_store/README.md: make -C build</li><li>origin/master:example/trans/perf/README.md: cmake . -B build</li><li>origin/master:example/trans/perf/README.md: make -C build</li></ul></div></div>
+      <div class="kv"><div class="k">文档中的测试命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的代码检测命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的容器命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档扫描备注</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">命令推断依据</div><div class="v"><ul><li>markdown scanned: 58 files</li><li>documented build command: example/bm/BmBenchmark/README.md</li></ul></div></div>
+    </div>
+    <div class="card">
+      <h3>证据与改进建议</h3>
+      <div class="kv"><div class="k">编码风格证据</div><div class="v"><ul><li>.clang-format</li></ul></div></div>
+      <div class="kv"><div class="k">代码检测证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">自动修复证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">规则统计明细</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器定义文件</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器镜像线索</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器环境阻塞</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">AI 代码检视证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">PR Run 证据</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>Markdown 改进建议</h3>
+      <ul><li>N/A</li></ul>
+      <h3>错误</h3>
+      <ul><li>N/A</li></ul>
+      <div class="kv"><div class="k">AI 总结</div><div class="v">N/A</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="repo-panel " id="repo-panel-2">
+  <div class="panel-grid">
+    <div class="card">
+      <h3>概览</h3>
+      <div class="kv"><div class="k">仓库</div><div class="v">sgl-project/sgl-kernel-npu</div></div>
+      <div class="kv"><div class="k">本地路径</div><div class="v"><code>D:\vbox\repos\repo_dev_eval_agent\.work\eval_xlsx_smoke\sgl-project__sgl-kernel-npu</code></div></div>
+      <div class="kv"><div class="k">Markdown 扫描文件数</div><div class="v">0</div></div>
+      <div class="kv"><div class="k">编码风格是否定义</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">代码检测是否支持</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">自动修复是否具备</div><div class="v">否</div></div>
+      <div class="kv"><div class="k">容器环境</div><div class="v">否 / 否 / <code>host</code></div></div>
+      <div class="kv"><div class="k">规则数量估算</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>本地探测结果</h3>
+      <div class="kv"><div class="k">增量构建</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">代码检测</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">UT</div><div class="v"><span class="status disabled">未配置</span> <code>N/A</code> (N/A)</div></div>
+      <div class="kv"><div class="k">构建失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">代码检测失败摘要</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">UT 失败摘要</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>PR 流水线</h3>
+      <div class="kv"><div class="k">平台 / 时间窗</div><div class="v"><code>github</code> / 最近 30 天</div></div>
+      <div class="kv"><div class="k">PR 采样 / Workflow</div><div class="v">20 / 20</div></div>
+      <div class="kv"><div class="k">PR 平均时长</div><div class="v">858.70s</div></div>
+      <div class="kv"><div class="k">PR 中位时长</div><div class="v">0.00s</div></div>
+      <div class="kv"><div class="k">最近一次 PR 时长</div><div class="v">0.00s</div></div>
+      <div class="kv"><div class="k">资源消耗</div><div class="v">CPU: 估算 15.33 core-min; NPU: N/A</div></div>
+      <div class="kv"><div class="k">PR 采集说明</div><div class="v">collected from GitHub Actions and PR APIs within the last 30 days</div></div>
+    </div>
+  </div>
+  <div class="panel-grid">
+    <div class="card">
+      <h3>文档与命令</h3>
+      <div class="kv"><div class="k">Markdown 相关文件</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的安装命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的构建命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的测试命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的代码检测命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档中的容器命令</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">文档扫描备注</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">命令推断依据</div><div class="v">N/A</div></div>
+    </div>
+    <div class="card">
+      <h3>证据与改进建议</h3>
+      <div class="kv"><div class="k">编码风格证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">代码检测证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">自动修复证据</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">规则统计明细</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器定义文件</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器镜像线索</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">容器环境阻塞</div><div class="v">N/A</div></div>
+      <div class="kv"><div class="k">AI 代码检视证据</div><div class="v"><ul><li>pr#406 review by gemini-code-assist[bot]</li><li>pr#406 comment by gemini-code-assist[bot]</li><li>pr#381 review by gemini-code-assist[bot]</li><li>pr#381 comment by gemini-code-assist[bot]</li><li>pr#399 review by gemini-code-assist[bot]</li><li>pr#399 comment by gemini-code-assist[bot]</li><li>pr#407 comment by gemini-code-assist[bot]</li><li>pr#401 review by gemini-code-assist[bot]</li><li>pr#401 comment by gemini-code-assist[bot]</li><li>pr#405 review by gemini-code-assist[bot]</li><li>pr#405 comment by gemini-code-assist[bot]</li><li>pr#404 review by gemini-code-assist[bot]</li><li>pr#404 comment by gemini-code-assist[bot]</li><li>pr#384 review by gemini-code-assist[bot]</li><li>pr#384 comment by gemini-code-assist[bot]</li><li>pr#403 review by gemini-code-assist[bot]</li><li>pr#403 comment by gemini-code-assist[bot]</li><li>pr#278 comment by gemini-code-assist[bot]</li><li>pr#402 review by gemini-code-assist[bot]</li><li>pr#402 comment by gemini-code-assist[bot]</li><li>pr#268 review by gemini-code-assist[bot]</li><li>pr#268 comment by gemini-code-assist[bot]</li><li>pr#366 review by gemini-code-assist[bot]</li><li>pr#366 comment by gemini-code-assist[bot]</li><li>pr#394 review by gemini-code-assist[bot]</li><li>pr#394 comment by gemini-code-assist[bot]</li><li>pr#400 review by gemini-code-assist[bot]</li><li>pr#400 comment by gemini-code-assist[bot]</li><li>pr#397 comment by gemini-code-assist[bot]</li><li>pr#398 comment by gemini-code-assist[bot]</li><li>pr#393 review by gemini-code-assist[bot]</li><li>pr#393 comment by gemini-code-assist[bot]</li><li>pr#396 review by gemini-code-assist[bot]</li><li>pr#396 comment by gemini-code-assist[bot]</li><li>pr#389 review by gemini-code-assist[bot]</li><li>pr#389 comment by gemini-code-assist[bot]</li></ul></div></div>
+      <div class="kv"><div class="k">PR Run 证据</div><div class="v"><ul><li>run:23477077508 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23477077515 Lint pull_request</li><li>run:23475876449 Lint pull_request</li><li>run:23475876448 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23468733092 Lint pull_request</li><li>run:23468733095 Build and Release SGL-Kernel-NPU pull_request</li><li>run:23468733104 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23468521305 Build and Release SGL-Kernel-NPU pull_request</li><li>run:23468521311 Lint pull_request</li><li>run:23468521331 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23434481589 Lint pull_request</li><li>run:23434481591 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23434261023 Lint pull_request</li><li>run:23434261006 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23433935801 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23433935777 Lint pull_request</li><li>run:23424605854 Lint pull_request</li><li>run:23424605865 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li><li>run:23417713879 Lint pull_request</li><li>run:23417713886 PR Test for SGL-KERNEL-NPU (Ascend NPU) pull_request</li></ul></div></div>
+    </div>
+    <div class="card">
+      <h3>Markdown 改进建议</h3>
+      <ul><li>N/A</li></ul>
+      <h3>错误</h3>
+      <ul><li>failed to clone/fetch repo: Cloning into &#x27;D:\vbox\repos\repo_dev_eval_agent\.work\eval_xlsx_smoke\sgl-project__sgl-kernel-npu&#x27;...
+fatal: unable to access &#x27;https://github.com/sgl-project/sgl-kernel-npu.git/&#x27;: Failed to connect to github.com port 443 after 21084 ms: Could not connect to server</li></ul>
+      <div class="kv"><div class="k">AI 总结</div><div class="v">N/A</div></div>
+    </div>
+  </div>
+</section>
+
+    </section>
+  </div>
+  <script>
+    function showRepoTab(index) {
+      const tabs = document.querySelectorAll('.repo-tab');
+      const panels = document.querySelectorAll('.repo-panel');
+      tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+      panels.forEach((panel, i) => panel.classList.toggle('active', i === index));
+    }
+  </script>
+</body>
+</html>
