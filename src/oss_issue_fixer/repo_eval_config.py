@@ -36,6 +36,8 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                 local_path=item.get("local_path", ""),
                 clone_url=item.get("clone_url", ""),
                 local=LocalEvalConfig(
+                    setup_command=local_raw.get("setup_command", ""),
+                    command_prefix=local_raw.get("command_prefix", ""),
                     build_command=local_raw.get("build_command", ""),
                     incremental_build_command=local_raw.get(
                         "incremental_build_command", ""
