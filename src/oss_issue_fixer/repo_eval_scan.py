@@ -103,10 +103,16 @@ GPU_IMAGE_HINTS = (
 
 IGNORED_REPO_DIRS = {
     ".git",
+    ".mypy_cache",
     ".pytest_cache",
+    ".ruff_cache",
     ".trae",
     ".venv",
+    ".work",
+    "build",
+    "dist",
     "node_modules",
+    "reports",
     "__pycache__",
 }
 

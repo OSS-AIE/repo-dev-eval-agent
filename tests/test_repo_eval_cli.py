@@ -69,6 +69,37 @@ def test_policy_from_repo_input_supports_local_path_with_ssh_remote(tmp_path: Pa
     assert policy.clone_url == "git@github.com:vllm-project/vllm.git"
 
 
+def test_policy_from_repo_input_prefers_remote_matching_local_repo_name(
+    tmp_path: Path,
+):
+    repo_dir = tmp_path / "repo_dev_eval_agent"
+    repo_dir.mkdir()
+    subprocess.run("git init", cwd=repo_dir, shell=True, check=True)
+    subprocess.run(
+        "git remote add origin https://github.com/robellliu-dev/oss-issue-fixer-agent.git",
+        cwd=repo_dir,
+        shell=True,
+        check=True,
+    )
+    subprocess.run(
+        "git remote add ossaie https://github.com/OSS-AIE/repo-dev-eval-agent.git",
+        cwd=repo_dir,
+        shell=True,
+        check=True,
+    )
+
+    policy = _policy_from_repo_input(
+        str(repo_dir),
+        local_runner="host",
+        local_wsl_distro="",
+        remote_cfg=RemoteEvalConfig(),
+        ai_cfg=AIEvalConfig(),
+    )
+
+    assert policy.name == "OSS-AIE/repo-dev-eval-agent"
+    assert policy.clone_url == "https://github.com/OSS-AIE/repo-dev-eval-agent.git"
+
+
 def test_load_repo_inputs_merges_cli_and_xlsx_inputs(tmp_path: Path):
     workbook = Workbook()
     sheet = workbook.active

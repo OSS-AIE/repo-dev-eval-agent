@@ -6,6 +6,8 @@ from openpyxl import load_workbook
 
 REPO_URL_HEADERS = (
     "仓库链接",
+    "倉庫鏈接",
+    "꾑욋졍쌈",
     "repo_url",
     "repository_url",
     "url",

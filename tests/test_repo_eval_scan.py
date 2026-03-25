@@ -311,3 +311,41 @@ def test_scan_repository_ignores_directories_named_dockerfile(
 
     assert result.container_environment.defined is False
     assert result.container_environment.dockerfiles == []
+
+
+def test_scan_repository_ignores_generated_workdirs_and_reports(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan._probe_container_runtime",
+        lambda: ContainerRuntimeProbe(
+            engine="docker",
+            cli_available=True,
+            daemon_available=True,
+            server_version="29.2.0",
+        ),
+    )
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir()
+    (docs_dir / "developer_guide.md").write_text(
+        "```bash\npytest tests/\n```",
+        encoding="utf-8",
+    )
+    work_dir = tmp_path / ".work" / "nested"
+    work_dir.mkdir(parents=True)
+    (work_dir / "README.md").write_text(
+        "```bash\ndocker run ignored/image:latest\n```",
+        encoding="utf-8",
+    )
+    reports_dir = tmp_path / "reports" / "samples"
+    reports_dir.mkdir(parents=True)
+    (reports_dir / "sample.md").write_text(
+        "```bash\npre-commit run -a\n```",
+        encoding="utf-8",
+    )
+
+    result = scan_repository(tmp_path)
+
+    assert result.documentation.markdown_files_scanned == 1
+    assert result.documentation.relevant_files == ["docs/developer_guide.md"]
