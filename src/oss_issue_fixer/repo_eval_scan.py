@@ -5,9 +5,11 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 from functools import lru_cache
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
+import requests
 import yaml
 
 from .repo_eval_models import (
@@ -91,6 +93,7 @@ FENCED_CODE_RE = re.compile(
     r"```(?P<lang>[^\n`]*)\n(?P<body>.*?)```",
     re.DOTALL,
 )
+MARKDOWN_LINK_RE = re.compile(r"\[[^\]]+\]\((?P<url>https?://[^)\s]+)\)")
 
 GPU_IMAGE_HINTS = (
     "cuda",
@@ -184,6 +187,10 @@ DOC_CONTAINER_HINTS = (
     "podman ",
 )
 
+COMMUNITY_DOC_SKILL_PATH = (
+    Path(__file__).resolve().parents[2] / "skills" / "community_docs" / "registry.yaml"
+)
+
 
 def _safe_read_text(path: Path) -> str:
     try:
@@ -211,6 +218,72 @@ def _safe_load_toml(path: Path) -> Any:
         return tomllib.loads(_safe_read_text(path))
     except Exception:
         return None
+
+
+class _ExternalDocHTMLParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self._skip_depth = 0
+        self._in_code = False
+        self._text_parts: list[str] = []
+        self._code_parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in {"script", "style"}:
+            self._skip_depth += 1
+            return
+        if self._skip_depth:
+            return
+        if tag in {"pre", "code"}:
+            self._in_code = True
+        if tag in {
+            "p",
+            "div",
+            "section",
+            "article",
+            "li",
+            "ul",
+            "ol",
+            "br",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+        }:
+            self._text_parts.append("\n")
+            if self._in_code:
+                self._code_parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style"}:
+            self._skip_depth = max(0, self._skip_depth - 1)
+            return
+        if self._skip_depth:
+            return
+        if tag in {"pre", "code"}:
+            self._in_code = False
+            self._code_parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth:
+            return
+        text = data.strip()
+        if not text:
+            return
+        self._text_parts.append(text)
+        self._text_parts.append("\n")
+        if self._in_code:
+            self._code_parts.append(text)
+            self._code_parts.append("\n")
+
+    def as_markdown_like_text(self) -> str:
+        code_blocks = "".join(self._code_parts).strip()
+        prose = "".join(self._text_parts).strip()
+        if code_blocks:
+            return f"```text\n{code_blocks}\n```\n\n{prose}".strip()
+        return prose
 
 
 def _collect_strings(value: Any) -> list[str]:
@@ -267,6 +340,139 @@ def _text_has_any(text: str, needles: tuple[str, ...]) -> bool:
     return any(needle in lowered for needle in needles)
 
 
+@lru_cache(maxsize=1)
+def _load_community_doc_skills() -> dict[str, dict[str, Any]]:
+    if not COMMUNITY_DOC_SKILL_PATH.exists():
+        return {}
+    data = _safe_load_yaml(COMMUNITY_DOC_SKILL_PATH)
+    if not isinstance(data, dict):
+        return {}
+    repos = data.get("repos", [])
+    if not isinstance(repos, list):
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for item in repos:
+        if not isinstance(item, dict):
+            continue
+        repo = str(item.get("repo") or "").strip()
+        if not repo:
+            continue
+        out[repo] = item
+    return out
+
+
+def _community_doc_skill(repo_name: str) -> dict[str, Any]:
+    return _load_community_doc_skills().get(repo_name, {})
+
+
+def _extract_external_links(text: str) -> list[str]:
+    return list(
+        dict.fromkeys(match.group("url") for match in MARKDOWN_LINK_RE.finditer(text))
+    )
+
+
+def _skill_seed_urls(repo_name: str) -> list[str]:
+    skill = _community_doc_skill(repo_name)
+    urls = skill.get("seed_urls", [])
+    if not isinstance(urls, list):
+        return []
+    return [str(url) for url in urls if str(url).strip()]
+
+
+def _skill_allowed_domains(repo_name: str) -> tuple[str, ...]:
+    skill = _community_doc_skill(repo_name)
+    domains = skill.get("allowed_domains", [])
+    if not isinstance(domains, list):
+        return ()
+    return tuple(str(domain).lower() for domain in domains if str(domain).strip())
+
+
+def _skill_notes(repo_name: str) -> list[str]:
+    skill = _community_doc_skill(repo_name)
+    notes = skill.get("notes", [])
+    if not isinstance(notes, list):
+        return []
+    return [str(note) for note in notes if str(note).strip()]
+
+
+def _should_follow_external_url(url: str, repo_name: str) -> bool:
+    lowered = url.lower()
+    if "/blob/" in lowered and any(
+        host in lowered for host in ("github.com/", "gitcode.com/")
+    ):
+        return True
+    allowed_domains = _skill_allowed_domains(repo_name)
+    if any(domain in lowered for domain in allowed_domains):
+        return True
+    return any(seed.lower() == lowered for seed in _skill_seed_urls(repo_name))
+
+
+def _remote_blob_ref_candidates(url: str) -> tuple[str, list[str]] | None:
+    patterns = (
+        r"https://github\.com/[^/]+/[^/]+/blob/(?P<ref>[^/]+)/(?P<path>.+)",
+        r"https://gitcode\.com/[^/]+/[^/]+/blob/(?P<ref>[^/]+)/(?P<path>.+)",
+    )
+    for pattern in patterns:
+        match = re.match(pattern, url)
+        if not match:
+            continue
+        ref = match.group("ref")
+        rel_path = match.group("path")
+        return rel_path, [ref, f"origin/{ref}"]
+    return None
+
+
+def _scan_git_ref_file(
+    root: Path,
+    rel_path: str,
+    refs: list[str],
+    assessment: DocumentationAssessment,
+    commands_seen: set[tuple[str, str, str]],
+) -> bool:
+    for ref in refs:
+        rc_show, file_text, show_stderr = _git_command(
+            root, ["show", f"{ref}:{rel_path}"]
+        )
+        if rc_show != 0:
+            continue
+        assessment.markdown_files_scanned += 1
+        _scan_markdown_text(
+            source_name=f"{ref}:{rel_path}",
+            text=file_text,
+            assessment=assessment,
+            commands_seen=commands_seen,
+        )
+        return True
+    assessment.notes.append(
+        f"failed to map blob doc to git refs for {rel_path}: {_short_text(show_stderr)}"
+    )
+    return False
+
+
+def _fetch_external_doc_text(url: str) -> tuple[str, str] | None:
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+    except Exception:
+        return None
+
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    text = response.text
+    if "text/markdown" in content_type or url.lower().endswith((".md", ".mdx")):
+        if "<html" not in text[:200].lower():
+            return "markdown", text
+
+    parser = _ExternalDocHTMLParser()
+    try:
+        parser.feed(text)
+    except Exception:
+        return None
+    extracted = parser.as_markdown_like_text()
+    if not extracted.strip():
+        return None
+    return "html", extracted
+
+
 def _markdown_files(root: Path) -> list[Path]:
     files = _repo_rglob(root, "*.md")
     files.extend(_repo_rglob(root, "*.mdx"))
@@ -309,9 +515,14 @@ def _classify_documentation_command(command: str) -> list[str]:
         categories.append("container")
     if _text_has_any(lowered, DOC_CHECK_HINTS):
         categories.append("check")
-    if _text_has_any(lowered, DOC_TEST_HINTS):
+    install_like = any(
+        token in lowered for token in ("pip install", "uv pip install", "python -m pip")
+    )
+    if _text_has_any(lowered, DOC_TEST_HINTS) and not install_like:
         categories.append("test")
     if _text_has_any(lowered, DOC_BUILD_HINTS):
+        categories.append("build")
+    elif "pip install" in lowered and ("-e ." in lowered or "--editable ." in lowered):
         categories.append("build")
     if _text_has_any(lowered, DOC_INSTALL_HINTS):
         categories.append("install")
@@ -398,6 +609,57 @@ def _scan_markdown_docs(root: Path) -> DocumentationAssessment:
             "markdown scanned, but no install/build/test/check instructions were extracted"
         )
     return assessment
+
+
+def _scan_external_docs(
+    root: Path,
+    repo_name: str,
+    base_docs: DocumentationAssessment,
+) -> DocumentationAssessment:
+    assessment = DocumentationAssessment()
+    commands_seen: set[tuple[str, str, str]] = set()
+    for note in _skill_notes(repo_name):
+        _append_unique(assessment.notes, f"community doc skill: {note}")
+
+    candidates: list[str] = []
+    for url in _skill_seed_urls(repo_name):
+        _append_unique(candidates, url)
+
+    for path in _markdown_files(root):
+        text = _safe_read_text(path)
+        for url in _extract_external_links(text):
+            if _should_follow_external_url(url, repo_name):
+                _append_unique(candidates, url)
+
+    seen_sources: set[str] = set()
+    for url in candidates:
+        if url in seen_sources:
+            continue
+        seen_sources.add(url)
+
+        mapped = _remote_blob_ref_candidates(url)
+        if mapped is not None:
+            rel_path, refs = mapped
+            if _scan_git_ref_file(root, rel_path, refs, assessment, commands_seen):
+                continue
+
+        fetched = _fetch_external_doc_text(url)
+        if fetched is None:
+            _append_unique(
+                assessment.notes,
+                f"failed to fetch external doc: {url}",
+            )
+            continue
+        _, text = fetched
+        assessment.markdown_files_scanned += 1
+        _scan_markdown_text(
+            source_name=url,
+            text=text,
+            assessment=assessment,
+            commands_seen=commands_seen,
+        )
+
+    return _merge_documentation_assessments(base_docs, assessment)
 
 
 def _scan_markdown_docs_from_git_ref(root: Path, ref: str) -> DocumentationAssessment:
@@ -1228,6 +1490,7 @@ def _detect_from_workflows(root: Path, result: StaticAnalysisResult) -> None:
 def scan_repository(
     root: Path,
     documentation_refs: list[str] | None = None,
+    repo_name: str = "",
 ) -> StaticAnalysisResult:
     result = StaticAnalysisResult()
     _detect_from_root_files(root, result)
@@ -1243,6 +1506,8 @@ def scan_repository(
             documentation,
             _scan_markdown_docs_from_git_ref(root, ref),
         )
+    if repo_name:
+        documentation = _scan_external_docs(root, repo_name, documentation)
     result.documentation = documentation
 
     for parser in (
