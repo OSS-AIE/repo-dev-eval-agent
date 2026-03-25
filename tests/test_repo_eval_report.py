@@ -99,7 +99,7 @@ def _sample_result() -> RepoEvaluationResult:
             sampled_pull_count=1,
             ai_review_supported=True,
             ai_review_evidence=["pr#215 comment by ascend-robot"],
-            collection_note="GitCode AI review detection requires a private token",
+            collection_note="GitCode 适配当前只支持 PR 评论/AI 检视信号采集，PR workflow 时长与资源指标暂未接入",
         ),
         documentation_issues=[
             DocumentationIssue(
@@ -127,6 +127,9 @@ def test_render_repo_eval_markdown_includes_failure_excerpts_and_doc_issues():
     assert "repository_script_issue" in report
     assert "修复脚本为 LF 行尾" in report
     assert "N/A" in report
+    assert "N/A 原因分析" in report
+    assert "当前 GitCode 适配只采集 PR 评论与 AI 检视信号" in report
+    assert "本地增量构建时间 显示为 N/A" in report
 
 
 def test_render_repo_eval_html_contains_summary_and_tabs():
@@ -140,3 +143,4 @@ def test_render_repo_eval_html_contains_summary_and_tabs():
     assert "Ascend/MindIE-SD" in html
     assert "Markdown 改进建议总览" in html
     assert "pr#215 comment by ascend-robot" in html
+    assert "N/A 原因分析" in html

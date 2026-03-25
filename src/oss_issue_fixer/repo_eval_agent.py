@@ -5,7 +5,7 @@ import shlex
 import statistics
 import subprocess
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +65,7 @@ def _parse_ts(value: str | None) -> datetime | None:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
 def _duration_seconds(start: str | None, end: str | None) -> float | None:
@@ -102,6 +102,37 @@ def _git_remote_origin(repo_path: Path) -> str:
     if proc.returncode != 0:
         return ""
     return (proc.stdout or "").strip()
+
+
+def _git_remote_urls(repo_path: Path) -> dict[str, str]:
+    rc, stdout, _ = _git_run(repo_path, ["remote"])
+    if rc != 0:
+        origin = _git_remote_origin(repo_path)
+        return {"origin": origin} if origin else {}
+
+    remotes: dict[str, str] = {}
+    for remote_name in stdout.splitlines():
+        name = remote_name.strip()
+        if not name:
+            continue
+        rc, remote_stdout, _ = _git_run(repo_path, ["remote", "get-url", name])
+        if rc != 0:
+            continue
+        url = remote_stdout.strip()
+        if url:
+            remotes[name] = url
+    return remotes
+
+
+def _preferred_fetch_remote_name(repo_path: Path, preferred_url: str = "") -> str:
+    remotes = _git_remote_urls(repo_path)
+    if not remotes:
+        return ""
+    if preferred_url:
+        for name, remote_url in remotes.items():
+            if remote_url == preferred_url:
+                return name
+    return "origin" if "origin" in remotes else next(iter(remotes))
 
 
 def _git_run(
@@ -144,7 +175,7 @@ def _git_remote_default_ref(repo_path: Path) -> str:
 
 
 def _window_start(days: int) -> datetime:
-    return datetime.now(UTC) - timedelta(days=max(0, days))
+    return datetime.now(timezone.utc) - timedelta(days=max(0, days))
 
 
 def _in_window(value: str | None, days: int) -> bool:
@@ -349,9 +380,15 @@ class RepoEvalAgent:
             if local_path.exists():
                 if repo.local.refresh_local_repo and _git_is_repo(local_path):
                     try:
+                        fetch_remote = _preferred_fetch_remote_name(
+                            local_path, repo.clone_url
+                        )
+                        fetch_args = ["fetch", fetch_remote, "--prune"]
+                        if not fetch_remote:
+                            fetch_args = ["fetch", "--all", "--prune"]
                         rc, _, stderr = _git_run(
                             local_path,
-                            ["fetch", "origin", "--prune"],
+                            fetch_args,
                             timeout=300,
                         )
                         if rc != 0:
@@ -487,6 +524,14 @@ class RepoEvalAgent:
         sampled_pull_count = 0
         markers = _ai_review_markers(repo)
         window_days = repo.github.pr_window_days
+        collection_notes: list[str] = []
+        workflow_error: str | None = None
+        review_error: str | None = None
+
+        if not getattr(client, "token", ""):
+            collection_notes.append(
+                "GitHub API 当前使用匿名访问，可能受到 rate limit 影响。"
+            )
 
         try:
             for event in repo.github.workflow_events:
@@ -525,7 +570,9 @@ class RepoEvalAgent:
                         if cap.npu_cards is not None:
                             npu_card_minutes += (job_duration / 60.0) * cap.npu_cards
         except Exception as exc:
-            errors.append(f"failed to collect workflow runs: {exc}")
+            workflow_error = f"failed to collect workflow runs: {exc}"
+            errors.append(workflow_error)
+            collection_notes.append("GitHub workflow 数据采集失败。")
 
         try:
             pulls = client.list_recent_pulls(repo.name, self.cfg.recent_review_pr_limit)
@@ -552,9 +599,24 @@ class RepoEvalAgent:
                         if signal not in ai_review_evidence:
                             ai_review_evidence.append(signal)
         except Exception as exc:
-            errors.append(f"failed to collect PR review signals: {exc}")
+            review_error = f"failed to collect PR review signals: {exc}"
+            errors.append(review_error)
+            collection_notes.append("GitHub PR review/comment 数据采集失败。")
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
+        if run_count == 0 and workflow_error is None:
+            collection_notes.append(
+                f"最近 {window_days} 天内没有可用的 GitHub Actions workflow 样本。"
+            )
+        if sampled_pull_count == 0 and review_error is None:
+            collection_notes.append(f"最近 {window_days} 天内没有可用的 PR 样本。")
+        if durations:
+            summary_note = f"collected from GitHub Actions and PR APIs within the last {window_days} days"
+        else:
+            summary_note = (
+                "；".join(dict.fromkeys(note for note in collection_notes if note))
+                or f"no recent GitHub PR activity found in the last {window_days} days"
+            )
         return PullRequestMetrics(
             remote_platform="github",
             pr_window_days=window_days,
@@ -572,11 +634,7 @@ class RepoEvalAgent:
             ai_review_supported=bool(ai_review_evidence),
             ai_review_evidence=ai_review_evidence,
             workflow_run_evidence=workflow_run_evidence[:20],
-            collection_note=(
-                f"collected from GitHub Actions and PR APIs within the last {window_days} days"
-                if run_count or sampled_pull_count
-                else f"no recent GitHub PR activity found in the last {window_days} days"
-            ),
+            collection_note=summary_note,
         )
 
     def _collect_gitcode_pr_metrics(
@@ -587,7 +645,7 @@ class RepoEvalAgent:
     ) -> PullRequestMetrics:
         client = RepoEvalGitCodeClient(token_env=repo.github.gitcode_token_env)
         window_days = repo.github.pr_window_days
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         if not client.token:
             return PullRequestMetrics(
                 remote_platform="gitcode",
@@ -597,8 +655,9 @@ class RepoEvalAgent:
                 ai_review_supported=bool(ai_review_signals),
                 ai_review_evidence=list(ai_review_signals),
                 collection_note=(
-                    "GitCode AI review detection requires a private token; "
-                    f"set {repo.github.gitcode_token_env} to inspect PR comments"
+                    "GitCode 适配当前只支持 PR 评论/AI 检视信号采集，"
+                    "PR workflow 时长与资源指标暂未接入；"
+                    f"如需评论采集，请设置 {repo.github.gitcode_token_env}"
                 ),
             )
 
@@ -635,9 +694,13 @@ class RepoEvalAgent:
             ai_review_supported=bool(ai_review_evidence),
             ai_review_evidence=ai_review_evidence,
             collection_note=(
-                f"collected GitCode PR comment signals within the last {window_days} days"
+                f"collected GitCode PR comment signals within the last {window_days} days; "
+                "workflow 时长与资源指标暂未接入"
                 if sampled_pull_count
-                else f"no recent GitCode PR activity found in the last {window_days} days"
+                else (
+                    f"no recent GitCode PR activity found in the last {window_days} days; "
+                    "workflow 时长与资源指标暂未接入"
+                )
             ),
         )
 

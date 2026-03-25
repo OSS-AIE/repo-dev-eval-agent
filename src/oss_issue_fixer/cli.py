@@ -42,6 +42,46 @@ def _git_remote_origin(repo_path: Path) -> str:
     return (proc.stdout or "").strip()
 
 
+def _git_remote_urls(repo_path: Path) -> dict[str, str]:
+    proc = subprocess.run(
+        "git remote",
+        cwd=str(repo_path),
+        shell=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+        timeout=10,
+    )
+    if proc.returncode != 0:
+        origin = _git_remote_origin(repo_path)
+        return {"origin": origin} if origin else {}
+
+    remotes: dict[str, str] = {}
+    for remote_name in (proc.stdout or "").splitlines():
+        name = remote_name.strip()
+        if not name:
+            continue
+        remote_proc = subprocess.run(
+            f"git remote get-url {name}",
+            cwd=str(repo_path),
+            shell=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=10,
+        )
+        if remote_proc.returncode != 0:
+            continue
+        url = (remote_proc.stdout or "").strip()
+        if url:
+            remotes[name] = url
+    return remotes
+
+
 def _repo_name_from_remote(remote_url: str) -> tuple[str, str]:
     if remote_url.startswith("git@") and ":" in remote_url:
         prefix, repo_part = remote_url.split(":", 1)
@@ -61,6 +101,36 @@ def _repo_name_from_remote(remote_url: str) -> tuple[str, str]:
     return "", host
 
 
+def _normalize_repo_basename(value: str) -> str:
+    return "".join(ch for ch in value.lower() if ch.isalnum())
+
+
+def _select_best_remote_url(repo_path: Path) -> str:
+    remotes = _git_remote_urls(repo_path)
+    if not remotes:
+        return ""
+
+    local_basename = _normalize_repo_basename(repo_path.resolve().name)
+    best_score = -1
+    best_url = ""
+    for remote_name, remote_url in remotes.items():
+        repo_name, _ = _repo_name_from_remote(remote_url)
+        remote_basename = (
+            _normalize_repo_basename(repo_name.split("/")[-1]) if repo_name else ""
+        )
+        score = 0
+        if remote_basename and remote_basename == local_basename:
+            score += 10
+        if remote_name == "origin":
+            score += 2
+        if remote_name in {"upstream", "ossaie"}:
+            score += 1
+        if score > best_score:
+            best_score = score
+            best_url = remote_url
+    return best_url or remotes.get("origin", "")
+
+
 def _policy_from_repo_input(
     raw: str,
     *,
@@ -72,7 +142,7 @@ def _policy_from_repo_input(
     candidate = Path(raw)
     if candidate.exists():
         local_path = str(candidate.resolve())
-        origin = _git_remote_origin(candidate.resolve())
+        origin = _select_best_remote_url(candidate.resolve())
         name, host = _repo_name_from_remote(origin)
         if not name:
             name = candidate.resolve().name

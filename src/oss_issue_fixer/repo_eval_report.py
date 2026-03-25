@@ -72,6 +72,77 @@ def _command_failure_text(result: CommandExecutionResult) -> str:
     return result.stderr_excerpt or result.stdout_excerpt
 
 
+def _command_na_reason(label: str, result: CommandExecutionResult) -> str:
+    if result.status == "ok":
+        if result.duration_sec is None:
+            return f"{label} 显示为 N/A，因为命令执行成功但没有返回耗时。"
+        return ""
+    if result.status == "not_configured":
+        return f"{label} 显示为 N/A，因为当前没有配置或推断出可执行命令。"
+    if result.status == "disabled":
+        return f"{label} 显示为 N/A，因为本次运行禁用了本地命令执行。"
+    if result.status in {"failed", "timeout", "error"}:
+        detail = _command_failure_text(result)
+        suffix = f" 失败摘要: {detail}" if detail else ""
+        return (
+            f"{label} 显示为 N/A，因为命令执行{_status_text(result)}。{suffix}".strip()
+        )
+    return f"{label} 显示为 N/A，因为命令状态为 `{result.status}`。"
+
+
+def _pr_duration_na_reason(item: RepoEvaluationResult) -> str:
+    metrics = item.pr_metrics
+    if metrics.average_duration_sec is not None:
+        return ""
+    reasons: list[str] = []
+    if metrics.remote_platform == "gitcode":
+        reasons.append(
+            "当前 GitCode 适配只采集 PR 评论与 AI 检视信号，尚未采集 workflow 时长。"
+        )
+    if metrics.collection_note:
+        reasons.append(metrics.collection_note)
+    elif metrics.workflow_run_count == 0:
+        reasons.append("时间窗内没有可用的 GitHub Actions workflow 样本。")
+    elif metrics.sampled_pull_count == 0:
+        reasons.append("时间窗内没有可用的 PR 样本。")
+    else:
+        reasons.append("已拿到 PR 或 workflow 样本，但没有形成可计算的时长数据。")
+    workflow_errors = [
+        error
+        for error in item.errors
+        if "workflow runs" in error.lower() or "pr review signals" in error.lower()
+    ]
+    reasons.extend(workflow_errors)
+    return "；".join(dict.fromkeys(reason for reason in reasons if reason))
+
+
+def _pr_resource_na_reason(item: RepoEvaluationResult) -> str:
+    metrics = item.pr_metrics
+    if (
+        metrics.actual_cpu_seconds is not None
+        or metrics.actual_npu_seconds is not None
+        or metrics.estimated_cpu_core_minutes is not None
+        or metrics.estimated_npu_card_minutes is not None
+    ):
+        return ""
+    if metrics.remote_platform == "gitcode":
+        return "PR 资源显示为 N/A，因为当前 GitCode 适配未采集 workflow job 资源指标。"
+    if metrics.workflow_run_count == 0:
+        return "PR 资源显示为 N/A，因为没有可用于估算资源的 workflow job 样本。"
+    return "PR 资源显示为 N/A，因为 workflow job 标签或时长不足以估算 CPU/NPU 消耗。"
+
+
+def _na_reason_lines(item: RepoEvaluationResult) -> list[str]:
+    reasons = [
+        _command_na_reason("本地增量构建时间", item.incremental_build),
+        _command_na_reason("本地代码检测时间", item.code_check),
+        _command_na_reason("本地 UT 执行时间", item.unit_test),
+        _pr_duration_na_reason(item),
+        _pr_resource_na_reason(item),
+    ]
+    return [reason for reason in reasons if reason]
+
+
 def _doc_commands(item: RepoEvaluationResult, category: str) -> list[str]:
     return [
         f"{entry.source_file}: {entry.command.replace(chr(10), ' ')}"
@@ -263,6 +334,11 @@ def render_repo_eval_markdown(results: list[RepoEvaluationResult]) -> str:
             f"- PR 执行时长: 平均 `{_duration_text(item.pr_metrics.average_duration_sec)}` / 中位 `{_duration_text(item.pr_metrics.median_duration_sec)}` / 最近一次 `{_duration_text(item.pr_metrics.latest_duration_sec)}`"
         )
         lines.append(f"- PR 资源消耗: {_resource_text(item)}")
+        na_reasons = _na_reason_lines(item)
+        if na_reasons:
+            lines.append("- N/A 原因分析:")
+            for reason in na_reasons:
+                lines.append(f"  - {reason}")
         lines.append(
             f"- AI 代码检视证据: {_join(item.pr_metrics.ai_review_evidence, separator='；')}"
         )
@@ -426,6 +502,7 @@ def _render_html_repo_panel(item: RepoEvaluationResult, index: int) -> str:
       {_render_html_list("容器环境阻塞", item.static.container_environment.setup_blockers)}
       {_render_html_list("AI 代码检视证据", item.pr_metrics.ai_review_evidence)}
       {_render_html_list("PR Run 证据", item.pr_metrics.workflow_run_evidence)}
+      {_render_html_list("N/A 原因分析", _na_reason_lines(item))}
     </div>
     <div class="card">
       <h3>Markdown 改进建议</h3>
