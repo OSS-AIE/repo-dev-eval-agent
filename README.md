@@ -93,6 +93,10 @@ Excel input expectations:
   - `repository_url`
   - `url`
 
+Tracked sample input:
+
+- `input/openlibing-code-repos.xlsx`
+
 HTML report behavior:
 
 - top-level summary table across all repositories
