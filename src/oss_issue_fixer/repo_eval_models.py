@@ -12,6 +12,8 @@ class RunnerCapacity:
 
 @dataclass
 class LocalEvalConfig:
+    setup_command: str = ""
+    command_prefix: str = ""
     build_command: str = ""
     incremental_build_command: str = ""
     unit_test_command: str = ""
@@ -158,6 +160,11 @@ class CommandExecutionResult:
     command: str = ""
     duration_sec: float | None = None
     returncode: int | None = None
+    setup_command: str = ""
+    setup_status: str = ""
+    setup_duration_sec: float | None = None
+    setup_stdout_excerpt: str = ""
+    setup_stderr_excerpt: str = ""
     stdout_excerpt: str = ""
     stderr_excerpt: str = ""
 
