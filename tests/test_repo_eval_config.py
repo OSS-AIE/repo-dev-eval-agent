@@ -17,6 +17,8 @@ repos:
   - name: example/project
     local_path: D:\\repo
     local:
+      setup_command: uv venv --python 3.12 --seed .venv
+      command_prefix: source .venv/bin/activate
       unit_test_command: pytest -q
       code_check_command: pre-commit run -a
       runner: wsl
@@ -40,6 +42,8 @@ repos:
     assert cfg.recent_pr_limit == 5
     assert len(cfg.repos) == 1
     assert cfg.repos[0].name == "example/project"
+    assert cfg.repos[0].local.setup_command == "uv venv --python 3.12 --seed .venv"
+    assert cfg.repos[0].local.command_prefix == "source .venv/bin/activate"
     assert cfg.repos[0].local.unit_test_command == "pytest -q"
     assert cfg.repos[0].local.code_check_command == "pre-commit run -a"
     assert cfg.repos[0].local.runner == "wsl"
