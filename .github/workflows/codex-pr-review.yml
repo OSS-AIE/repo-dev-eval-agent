@@ -33,8 +33,6 @@ jobs:
   review:
     if: ${{ github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
-    env:
-      HAS_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
     steps:
       - name: Checkout base repository
         uses: actions/checkout@v4
@@ -51,12 +49,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Skip when OpenAI secret is missing
-        if: ${{ env.HAS_OPENAI_API_KEY != 'true' }}
-        run: echo "OPENAI_API_KEY is not configured; skipping Codex review."
-
       - name: Generate Codex review comment
-        if: ${{ env.HAS_OPENAI_API_KEY == 'true' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
