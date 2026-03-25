@@ -69,6 +69,21 @@ def test_comment_marker_and_heading_are_configurable(monkeypatch):
     assert module._comment_heading() == "Gemini review"
 
 
+def test_build_missing_key_comment_body_contains_settings_guidance(monkeypatch):
+    module = _load_module()
+    monkeypatch.setenv("GITHUB_SERVER_URL", "https://github.com")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "OSS-AIE/repo-dev-eval-agent")
+
+    body = module._build_missing_key_comment_body(
+        "openai",
+        "https://github.com/OSS-AIE/repo-dev-eval-agent/pull/2",
+    )
+
+    assert "OPENAI_API_KEY" in body
+    assert "/settings/secrets/actions" in body
+    assert "状态: 已跳过" in body
+
+
 def test_request_ai_review_routes_to_provider(monkeypatch):
     module = _load_module()
     context = module.GitHubContext(
@@ -96,10 +111,23 @@ def test_main_skips_when_provider_key_missing(monkeypatch, capsys):
     module = _load_module()
     monkeypatch.setenv("AI_REVIEW_PROVIDER", "gemini")
     monkeypatch.setenv("GITHUB_REPOSITORY", "OSS-AIE/repo-dev-eval-agent")
+    monkeypatch.setenv("GITHUB_SERVER_URL", "https://github.com")
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("PR_NUMBER", "12")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setattr(
+        module,
+        "_fetch_pr_snapshot",
+        lambda context: {"pr": {"html_url": "https://example.invalid/pr/12"}, "files": [], "diff": ""},
+    )
+    published: dict[str, str] = {}
+
+    def fake_publish(context, body):
+        published["body"] = body
+
+    monkeypatch.setattr(module, "_publish_comment", fake_publish)
 
     assert module.main() == 0
     assert "gemini API key is not configured" in capsys.readouterr().out
+    assert "GEMINI_API_KEY or GOOGLE_API_KEY" in published["body"]

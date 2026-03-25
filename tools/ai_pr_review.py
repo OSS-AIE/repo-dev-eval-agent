@@ -120,6 +120,14 @@ def _required_api_key(provider: str) -> str:
     raise RuntimeError(f"unsupported AI review provider: {provider}")
 
 
+def _missing_key_env_name(provider: str) -> str:
+    if provider == "openai":
+        return "OPENAI_API_KEY"
+    if provider == "gemini":
+        return "GEMINI_API_KEY or GOOGLE_API_KEY"
+    raise RuntimeError(f"unsupported AI review provider: {provider}")
+
+
 def _extract_openai_output_text(payload: dict[str, Any]) -> str:
     if isinstance(payload.get("output_text"), str) and payload["output_text"].strip():
         return payload["output_text"].strip()
@@ -334,23 +342,51 @@ def _publish_comment(context: GitHubContext, body: str) -> None:
     )
 
 
+def _build_review_comment_body(provider: str, pr_url: str, review: str) -> str:
+    return (
+        f"{_comment_marker()}\n"
+        f"## {_comment_heading()}\n"
+        f"- Provider: `{provider}`\n"
+        f"- PR: {pr_url}\n\n"
+        f"{review}\n"
+    )
+
+
+def _build_missing_key_comment_body(provider: str, pr_url: str) -> str:
+    secret_name = _missing_key_env_name(provider)
+    settings_url = (
+        f"{_env('GITHUB_SERVER_URL', 'https://github.com')}/"
+        f"{_env('GITHUB_REPOSITORY')}/settings/secrets/actions"
+    )
+    return (
+        f"{_comment_marker()}\n"
+        f"## {_comment_heading()}\n"
+        f"- Provider: `{provider}`\n"
+        f"- PR: {pr_url}\n"
+        "- 状态: 已跳过\n\n"
+        "当前没有生成 AI 代码检视意见，因为仓库尚未配置对应的 Actions 密钥。\n\n"
+        "建议：\n"
+        f"- 在仓库 Secrets 中配置 `{secret_name}`\n"
+        f"- 配置入口: {settings_url}\n"
+        "- 配置完成后，重新触发本 workflow 或向 PR 再推送一次提交\n"
+    )
+
+
 def main() -> int:
     try:
         context = _must_context()
         provider = _provider()
-        if not _required_api_key(provider):
-            print(f"{provider} API key is not configured; skipping AI review comment.")
-            return 0
         snapshot = _fetch_pr_snapshot(context)
-        review = _request_ai_review(snapshot, context)
         pr_url = snapshot["pr"].get("html_url", "")
-        body = (
-            f"{_comment_marker()}\n"
-            f"## {_comment_heading()}\n"
-            f"- Provider: `{provider}`\n"
-            f"- PR: {pr_url}\n\n"
-            f"{review}\n"
-        )
+        if not _required_api_key(provider):
+            body = _build_missing_key_comment_body(provider, pr_url)
+            _publish_comment(context, body)
+            print(
+                f"{provider} API key is not configured; published setup guidance comment."
+            )
+            return 0
+        review = _request_ai_review(snapshot, context)
+        body = _build_review_comment_body(provider, pr_url, review)
         _publish_comment(context, body)
         print(f"{provider} review comment published.")
         return 0
