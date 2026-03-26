@@ -15,8 +15,23 @@ repos:
               uv venv --python 3.12 --seed .venv
             fi
             source .venv/bin/activate
-            VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
-            uv pip install pre-commit pytest pytest-asyncio tblib
+            if ! python - <<'PY'
+            import importlib.util
+            import sys
+            required = [
+                "vllm",
+                "pre_commit",
+                "pytest",
+                "pytest_asyncio",
+                "tblib",
+            ]
+            missing = [name for name in required if importlib.util.find_spec(name) is None]
+            sys.exit(0 if not missing else 1)
+            PY
+            then
+              VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
+              uv pip install pre-commit pytest pytest-asyncio tblib
+            fi
           command_prefix: source .venv/bin/activate
           build_command: VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
           unit_test_command: python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q
