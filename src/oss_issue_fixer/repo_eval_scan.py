@@ -45,6 +45,7 @@ CHECK_FILES = (
     "tox.ini",
     ".pre-commit-config.yaml",
     ".coveragerc",
+    ".gemini/config.yaml",
 )
 
 CHECK_KEYWORDS = (
@@ -393,6 +394,48 @@ def _skill_notes(repo_name: str) -> list[str]:
     if not isinstance(notes, list):
         return []
     return [str(note) for note in notes if str(note).strip()]
+
+
+def _skill_local_setup_command(repo_name: str, runner: str = "") -> str:
+    skill = _community_doc_skill(repo_name)
+    local = skill.get("local", {}) if skill else {}
+    if not isinstance(local, dict):
+        return ""
+    overrides = local.get("runner_overrides", {})
+    if isinstance(overrides, dict) and runner:
+        override = overrides.get(runner, {})
+        if isinstance(override, dict) and override.get("setup_command"):
+            return str(override["setup_command"])
+    value = local.get("setup_command", "")
+    return str(value) if value else ""
+
+
+def _skill_command_prefix(repo_name: str, runner: str = "") -> str:
+    skill = _community_doc_skill(repo_name)
+    local = skill.get("local", {}) if skill else {}
+    if not isinstance(local, dict):
+        return ""
+    overrides = local.get("runner_overrides", {})
+    if isinstance(overrides, dict) and runner:
+        override = overrides.get(runner, {})
+        if isinstance(override, dict) and override.get("command_prefix"):
+            return str(override["command_prefix"])
+    value = local.get("command_prefix", "")
+    return str(value) if value else ""
+
+
+def _skill_local_command(repo_name: str, key: str, runner: str = "") -> str:
+    skill = _community_doc_skill(repo_name)
+    local = skill.get("local", {}) if skill else {}
+    if not isinstance(local, dict):
+        return ""
+    overrides = local.get("runner_overrides", {})
+    if isinstance(overrides, dict) and runner:
+        override = overrides.get(runner, {})
+        if isinstance(override, dict) and override.get(key):
+            return str(override[key])
+    value = local.get(key, "")
+    return str(value) if value else ""
 
 
 def _should_follow_external_url(url: str, repo_name: str) -> bool:
@@ -1487,6 +1530,21 @@ def _detect_from_workflows(root: Path, result: StaticAnalysisResult) -> None:
                 )
 
 
+def _detect_from_ai_repo_configs(root: Path, result: StaticAnalysisResult) -> None:
+    gemini_config = root / ".gemini" / "config.yaml"
+    gemini_styleguide = root / ".gemini" / "styleguide.md"
+    if gemini_config.exists():
+        _append_unique(result.ai_review_signals, ".gemini/config.yaml:gemini")
+    if gemini_styleguide.exists():
+        _append_unique(result.ai_review_signals, ".gemini/styleguide.md:gemini")
+    copilot_instructions = root / ".github" / "copilot-instructions.md"
+    if copilot_instructions.exists():
+        _append_unique(
+            result.ai_review_signals,
+            ".github/copilot-instructions.md:copilot",
+        )
+
+
 def scan_repository(
     root: Path,
     documentation_refs: list[str] | None = None,
@@ -1499,6 +1557,7 @@ def scan_repository(
     _detect_from_shell_scripts(root, result)
     _detect_from_package_json(root, result)
     _detect_from_workflows(root, result)
+    _detect_from_ai_repo_configs(root, result)
     result.container_environment = _scan_container_environment(root)
     documentation = _scan_markdown_docs(root)
     for ref in documentation_refs or []:

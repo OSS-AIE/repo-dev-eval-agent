@@ -189,6 +189,10 @@ This repository now includes:
   - run `pytest`
   - run `pre-commit`
   - run `actionlint`
+- `.github/workflows/codeql.yml`
+  - run official GitHub CodeQL analysis for Python
+  - trigger on `pull_request`, `push main`, weekly schedule, and manual dispatch
+  - upload security results to GitHub code scanning
 - `.github/workflows/codex-pr-review.yml`
   - Codex / OpenAI-based PR review comment
   - safe by default: uses `pull_request_target` but only reads PR metadata/diff through GitHub API
@@ -197,6 +201,10 @@ This repository now includes:
   - Gemini-based PR review comment
   - same safe execution model as Codex review
   - requires `GEMINI_API_KEY` or `GOOGLE_API_KEY`
+- `.gemini/config.yaml` + `.gemini/styleguide.md`
+  - native Gemini Code Assist repository customization
+  - does not require this repository to call Gemini APIs from Actions
+  - intended for the GitHub-side Gemini Code Assist integration, similar to `vllm-project/vllm-ascend`
 
 Recommended repository configuration:
 
@@ -206,11 +214,13 @@ Recommended repository configuration:
 - Actions secret: `GEMINI_API_KEY` or `GOOGLE_API_KEY`
 - Optional Actions secret: `GEMINI_BASE_URL`
 - Optional Actions variable: `GEMINI_REVIEW_MODEL`
+- Install / enable Gemini Code Assist for GitHub if you want native Gemini PR summaries/comments driven by `.gemini/*`
 
 Behavior notes:
 
 - Codex and Gemini each publish their own sticky PR comment and update it on re-run
 - comment markers are separated, so two providers can run in parallel without overwriting each other
+- native Gemini repository behavior can also be customized without Secrets by `.gemini/config.yaml`
 - default models:
   - OpenAI: `gpt-5-mini`
   - Gemini: `gemini-2.5-flash`
