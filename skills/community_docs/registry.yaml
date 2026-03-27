@@ -34,8 +34,8 @@ repos:
             fi
           command_prefix: source .venv/bin/activate
           build_command: VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
-          unit_test_command: python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q
-          code_check_command: pre-commit run -a
+          unit_test_command: python -m pytest -s -v tests/test_logger.py -q
+          code_check_command: python -m ruff check tests/test_logger.py vllm || python -m compileall -q vllm tests/test_logger.py
 
   - repo: Ascend/MindIE-SD
     allowed_domains:

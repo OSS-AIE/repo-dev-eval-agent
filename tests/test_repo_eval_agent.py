@@ -366,8 +366,9 @@ def test_evaluate_repo_uses_skill_local_overrides(monkeypatch, tmp_path: Path):
         run_twice,
         setup_command="",
         command_prefix="",
+        execution_repo_path="",
     ):
-        captured.append((command, setup_command, command_prefix))
+        captured.append((command, setup_command, command_prefix, execution_repo_path))
         return __import__(
             "oss_issue_fixer.repo_eval_models", fromlist=["CommandExecutionResult"]
         ).CommandExecutionResult(status="disabled", command=command)
@@ -392,11 +393,11 @@ def test_evaluate_repo_uses_skill_local_overrides(monkeypatch, tmp_path: Path):
 
     assert result.repo == "vllm-project/vllm"
     assert any(
-        command
-        == "python -m pytest tests/v1/structured_output/test_backend_xgrammar.py -q"
+        command == "python -m pytest -s -v tests/test_logger.py -q"
         and "uv venv --python 3.12 --seed .venv" in setup_command
         and command_prefix == "source .venv/bin/activate"
-        for command, setup_command, command_prefix in captured
+        and execution_repo_path
+        for command, setup_command, command_prefix, execution_repo_path in captured
     )
 
 
@@ -441,3 +442,73 @@ def test_resolve_repo_refreshes_remote_matching_clone_url(monkeypatch, tmp_path:
 
     assert resolved == tmp_path.resolve()
     assert ["fetch", "ossaie", "--prune"] in seen_args
+
+
+def test_resolve_execution_repo_prefers_native_wsl_workspace(
+    monkeypatch,
+    tmp_path: Path,
+):
+    subprocess.run("git init", cwd=tmp_path, shell=True, check=True)
+    subprocess.run(
+        "git remote add origin https://github.com/apache/logging-log4j2.git",
+        cwd=tmp_path,
+        shell=True,
+        check=True,
+    )
+
+    seen_args: list[list[str]] = []
+
+    def fake_run(*args, **kwargs):
+        seen_args.append(args[0])
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout="/home/tester/.cache/repo-dev-eval/repos/apache__logging-log4j2",
+            stderr="",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(enable_local_commands=False),
+        disable_ai=True,
+    )
+    repo = RepoEvalPolicy(
+        name="apache/logging-log4j2",
+        local_path=str(tmp_path),
+        clone_url="https://github.com/apache/logging-log4j2.git",
+        local=LocalEvalConfig(
+            runner="wsl",
+            wsl_distro="Ubuntu",
+            wsl_workspace_root="~/.cache/repo-dev-eval/repos",
+        ),
+    )
+    errors: list[str] = []
+
+    execution_path = agent._resolve_execution_repo(repo, tmp_path, errors)
+
+    assert not errors
+    assert (
+        execution_path
+        == "/home/tester/.cache/repo-dev-eval/repos/apache__logging-log4j2"
+    )
+    assert seen_args
+    assert any(args[0] == "wsl.exe" for args in seen_args)
+
+
+def test_resolve_execution_repo_falls_back_without_clone_url(tmp_path: Path):
+    agent = RepoEvalAgent(
+        cfg=RepoEvalAppConfig(enable_local_commands=False),
+        disable_ai=True,
+    )
+    repo = RepoEvalPolicy(
+        name="local-only",
+        local_path=str(tmp_path),
+        local=LocalEvalConfig(runner="wsl", wsl_distro="Ubuntu"),
+    )
+    errors: list[str] = []
+
+    execution_path = agent._resolve_execution_repo(repo, tmp_path, errors)
+
+    assert execution_path.startswith("/mnt/")
+    assert errors

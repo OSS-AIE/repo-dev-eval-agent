@@ -344,6 +344,19 @@ def _build_local_metric_root_causes(
             )
         )
 
+    if (
+        "requirejavaversion" in text
+        or ("detected jdk version" in text and "allowed range" in text)
+        or ("java_home" in text and "allowed range" in text)
+    ):
+        causes.append(
+            _root_cause_entry(
+                "JDK 鐗堟湰涓嶅尮閰?",
+                f"{label} 褰撳墠澶辫触鐨勭洿鎺ユ牴鍥犳槸 WSL 鍐呯殑 Java/JDK 鐗堟湰涓嶅尮閰嶄粨搴撹姹傘€?",
+                base_evidence,
+            )
+        )
+
     doc_issue_categories = (
         "missing_build_command_docs",
         "missing_test_command_docs",

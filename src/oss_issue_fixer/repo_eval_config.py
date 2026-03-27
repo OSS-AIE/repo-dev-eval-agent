@@ -46,6 +46,10 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                     code_check_command=local_raw.get("code_check_command", ""),
                     runner=local_raw.get("runner", "host"),
                     wsl_distro=local_raw.get("wsl_distro", ""),
+                    wsl_workspace_root=local_raw.get("wsl_workspace_root", ""),
+                    prefer_wsl_native_workspace=bool(
+                        local_raw.get("prefer_wsl_native_workspace", True)
+                    ),
                     refresh_local_repo=bool(local_raw.get("refresh_local_repo", True)),
                     documentation_refs=list(
                         local_raw.get("documentation_refs", []) or []

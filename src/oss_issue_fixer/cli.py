@@ -136,6 +136,7 @@ def _policy_from_repo_input(
     *,
     local_runner: str,
     local_wsl_distro: str,
+    local_wsl_workspace_root: str,
     remote_cfg: RemoteEvalConfig,
     ai_cfg: AIEvalConfig,
 ) -> RepoEvalPolicy:
@@ -158,6 +159,7 @@ def _policy_from_repo_input(
             local=LocalEvalConfig(
                 runner=local_runner,
                 wsl_distro=local_wsl_distro,
+                wsl_workspace_root=local_wsl_workspace_root,
             ),
             github=remote_cfg,
             ai=ai_cfg,
@@ -177,6 +179,7 @@ def _policy_from_repo_input(
             local=LocalEvalConfig(
                 runner=local_runner,
                 wsl_distro=local_wsl_distro,
+                wsl_workspace_root=local_wsl_workspace_root,
             ),
             github=remote_cfg,
             ai=ai_cfg,
@@ -189,6 +192,7 @@ def _policy_from_repo_input(
             local=LocalEvalConfig(
                 runner=local_runner,
                 wsl_distro=local_wsl_distro,
+                wsl_workspace_root=local_wsl_workspace_root,
             ),
             github=remote_cfg,
             ai=ai_cfg,
@@ -323,6 +327,7 @@ def main() -> None:
     assess.add_argument("--default-timeout-sec", type=int, default=1800)
     assess.add_argument("--local-runner", choices=["host", "wsl"], default="host")
     assess.add_argument("--wsl-distro", default="")
+    assess.add_argument("--wsl-workspace-root", default="~/.cache/repo-dev-eval/repos")
     assess.add_argument("--enable-command-inference", action="store_true")
     assess.add_argument("--disable-command-inference", action="store_true")
     assess.add_argument(
@@ -407,6 +412,7 @@ def main() -> None:
                 raw,
                 local_runner=args.local_runner,
                 local_wsl_distro=args.wsl_distro,
+                local_wsl_workspace_root=args.wsl_workspace_root,
                 remote_cfg=remote_cfg,
                 ai_cfg=ai_cfg,
             )

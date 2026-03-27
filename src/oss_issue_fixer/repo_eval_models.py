@@ -20,6 +20,8 @@ class LocalEvalConfig:
     code_check_command: str = ""
     runner: str = "host"
     wsl_distro: str = ""
+    wsl_workspace_root: str = ""
+    prefer_wsl_native_workspace: bool = True
     refresh_local_repo: bool = True
     documentation_refs: list[str] = field(default_factory=list)
     timeout_sec: int = 1800
