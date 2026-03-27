@@ -70,6 +70,40 @@ jobs:
     assert result.inferred_unit_test_command == "pytest -q"
 
 
+def test_scan_repository_detects_native_gemini_repo_config(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "oss_issue_fixer.repo_eval_scan._probe_container_runtime",
+        lambda: ContainerRuntimeProbe(
+            engine="docker",
+            cli_available=True,
+            daemon_available=True,
+            server_version="29.2.0",
+        ),
+    )
+    gemini_dir = tmp_path / ".gemini"
+    gemini_dir.mkdir()
+    (gemini_dir / "config.yaml").write_text(
+        "code_review:\n  pull_request_opened:\n    summary: true\n",
+        encoding="utf-8",
+    )
+    (gemini_dir / "styleguide.md").write_text(
+        "# Gemini review style\n",
+        encoding="utf-8",
+    )
+
+    result = scan_repository(tmp_path)
+
+    assert any(
+        ".gemini/config.yaml:gemini" == item for item in result.ai_review_signals
+    )
+    assert any(
+        ".gemini/styleguide.md:gemini" == item for item in result.ai_review_signals
+    )
+
+
 def test_scan_repository_detects_shell_driven_repo_patterns(
     tmp_path: Path,
     monkeypatch,
