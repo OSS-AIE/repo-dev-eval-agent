@@ -45,6 +45,7 @@ CHECK_FILES = (
     "tox.ini",
     ".pre-commit-config.yaml",
     ".coveragerc",
+    ".gemini/config.yaml",
 )
 
 CHECK_KEYWORDS = (
@@ -1529,6 +1530,21 @@ def _detect_from_workflows(root: Path, result: StaticAnalysisResult) -> None:
                 )
 
 
+def _detect_from_ai_repo_configs(root: Path, result: StaticAnalysisResult) -> None:
+    gemini_config = root / ".gemini" / "config.yaml"
+    gemini_styleguide = root / ".gemini" / "styleguide.md"
+    if gemini_config.exists():
+        _append_unique(result.ai_review_signals, ".gemini/config.yaml:gemini")
+    if gemini_styleguide.exists():
+        _append_unique(result.ai_review_signals, ".gemini/styleguide.md:gemini")
+    copilot_instructions = root / ".github" / "copilot-instructions.md"
+    if copilot_instructions.exists():
+        _append_unique(
+            result.ai_review_signals,
+            ".github/copilot-instructions.md:copilot",
+        )
+
+
 def scan_repository(
     root: Path,
     documentation_refs: list[str] | None = None,
@@ -1541,6 +1557,7 @@ def scan_repository(
     _detect_from_shell_scripts(root, result)
     _detect_from_package_json(root, result)
     _detect_from_workflows(root, result)
+    _detect_from_ai_repo_configs(root, result)
     result.container_environment = _scan_container_environment(root)
     documentation = _scan_markdown_docs(root)
     for ref in documentation_refs or []:
