@@ -5,7 +5,7 @@ repos:
     seed_urls:
       - https://docs.vllm.ai/en/latest/contributing/index.html
     notes:
-      - README 里的 Contributing 入口会跳转到 docs.vllm.ai，需要继续抓取站点文档中的本地构建、测试和代码检查命令。
+      - README 里的贡献入口会跳转到 docs.vllm.ai contributing 文档，需要继续抓取站点文档里的本地构建、测试和代码检测命令。
     local:
       runner_overrides:
         wsl:
