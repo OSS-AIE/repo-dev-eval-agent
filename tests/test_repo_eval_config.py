@@ -17,10 +17,14 @@ repos:
   - name: example/project
     local_path: D:\\repo
     local:
+      setup_command: uv venv --python 3.12 --seed .venv
+      command_prefix: source .venv/bin/activate
       unit_test_command: pytest -q
       code_check_command: pre-commit run -a
       runner: wsl
       wsl_distro: Ubuntu
+      wsl_workspace_root: ~/.cache/repo-dev-eval/repos
+      prefer_wsl_native_workspace: true
       refresh_local_repo: false
       documentation_refs: [origin/master]
     ai:
@@ -40,10 +44,14 @@ repos:
     assert cfg.recent_pr_limit == 5
     assert len(cfg.repos) == 1
     assert cfg.repos[0].name == "example/project"
+    assert cfg.repos[0].local.setup_command == "uv venv --python 3.12 --seed .venv"
+    assert cfg.repos[0].local.command_prefix == "source .venv/bin/activate"
     assert cfg.repos[0].local.unit_test_command == "pytest -q"
     assert cfg.repos[0].local.code_check_command == "pre-commit run -a"
     assert cfg.repos[0].local.runner == "wsl"
     assert cfg.repos[0].local.wsl_distro == "Ubuntu"
+    assert cfg.repos[0].local.wsl_workspace_root == "~/.cache/repo-dev-eval/repos"
+    assert cfg.repos[0].local.prefer_wsl_native_workspace is True
     assert cfg.repos[0].local.refresh_local_repo is False
     assert cfg.repos[0].local.documentation_refs == ["origin/master"]
     assert cfg.repos[0].ai.provider == "codex"

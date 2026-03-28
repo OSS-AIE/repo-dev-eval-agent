@@ -6,6 +6,37 @@ repos:
       - https://docs.vllm.ai/en/latest/contributing/index.html
     notes:
       - README 里的贡献入口会跳转到 docs.vllm.ai contributing 文档，需要继续抓取站点文档里的本地构建、测试和代码检测命令。
+    local:
+      runner_overrides:
+        wsl:
+          setup_command: |
+            export UV_LINK_MODE=copy
+            if [ ! -d .venv ]; then
+              uv venv --python 3.12 --seed .venv
+            fi
+            source .venv/bin/activate
+            if ! python - <<'PY'
+            import importlib.util
+            import sys
+            required = [
+                "vllm",
+                "pre_commit",
+                "pytest",
+                "pytest_asyncio",
+                "tblib",
+            ]
+            missing = [name for name in required if importlib.util.find_spec(name) is None]
+            sys.exit(0 if not missing else 1)
+            PY
+            then
+              VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
+              uv pip install pre-commit pytest pytest-asyncio tblib
+            fi
+          command_prefix: source .venv/bin/activate
+          build_command: VLLM_USE_PRECOMPILED=1 uv pip install -U -e . --torch-backend=auto
+          unit_test_command: python -m pytest -s -v tests/test_logger.py -q
+          code_check_command: python -m ruff check tests/test_logger.py vllm || python -m compileall -q vllm tests/test_logger.py
+
   - repo: Ascend/MindIE-SD
     allowed_domains:
       - gitcode.com
@@ -13,3 +44,9 @@ repos:
       - https://gitcode.com/Ascend/MindIE-SD/blob/master/docs/zh/developer_guide.md
     notes:
       - GitCode 中文开发指南包含容器拉取、构建和测试说明，优先映射到本地 git ref 或远端 blob 内容。
+      - MindIE 镜像通常需要登录 Ascend 镜像站点后手工下载，匿名 docker pull 很可能失败。
+    local:
+      runner_overrides:
+        wsl:
+          build_command: bash build/build.sh
+          unit_test_command: bash tests/run_UT_test.sh

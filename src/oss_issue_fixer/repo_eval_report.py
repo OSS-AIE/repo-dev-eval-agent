@@ -127,6 +127,16 @@ def _command_source_evidence(
     doc_category: str,
 ) -> list[str]:
     evidence: list[str] = []
+    if result.setup_command:
+        evidence.append(f"准备命令: {result.setup_command}")
+    if result.setup_status:
+        evidence.append(f"准备状态: {result.setup_status}")
+    if result.setup_duration_sec is not None:
+        evidence.append(f"准备耗时: {_duration_text(result.setup_duration_sec)}")
+    if result.setup_stdout_excerpt:
+        evidence.append(f"准备输出摘要: {result.setup_stdout_excerpt}")
+    if result.setup_stderr_excerpt:
+        evidence.append(f"准备失败摘要: {result.setup_stderr_excerpt}")
     if result.command:
         evidence.append(f"命令: {result.command}")
     if result.returncode is not None:
@@ -331,6 +341,19 @@ def _build_local_metric_root_causes(
                 "仓库脚本问题",
                 f"{label} 当前失败的直接根因在仓库脚本本身，例如 CRLF/LF 行尾、脚本语法或内容错误，而不是单纯的 Markdown 说明不清楚。",
                 base_evidence + _issue_evidence(item, ("repository_script_issue",)),
+            )
+        )
+
+    if (
+        "requirejavaversion" in text
+        or ("detected jdk version" in text and "allowed range" in text)
+        or ("java_home" in text and "allowed range" in text)
+    ):
+        causes.append(
+            _root_cause_entry(
+                "JDK 鐗堟湰涓嶅尮閰?",
+                f"{label} 褰撳墠澶辫触鐨勭洿鎺ユ牴鍥犳槸 WSL 鍐呯殑 Java/JDK 鐗堟湰涓嶅尮閰嶄粨搴撹姹傘€?",
+                base_evidence,
             )
         )
 

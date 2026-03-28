@@ -23,7 +23,13 @@ from .repo_eval_models import (
     RepoEvaluationResult,
     RunnerCapacity,
 )
-from .repo_eval_scan import infer_local_commands, scan_repository
+from .repo_eval_scan import (
+    _skill_command_prefix,
+    _skill_local_command,
+    _skill_local_setup_command,
+    infer_local_commands,
+    scan_repository,
+)
 
 DEFAULT_AI_REVIEW_MARKERS = (
     "copilot",
@@ -244,6 +250,15 @@ def _windows_to_wsl_path(path: Path) -> str:
     return f"/mnt/{drive}/{tail}"
 
 
+def _repo_slug(value: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "__", value.strip())
+    return slug.strip("._-") or "repo"
+
+
+def _escape_wsl_bash_script(script: str) -> str:
+    return re.sub(r"(?<!\\)\$", r"\\$", script)
+
+
 def _normalize_host_command(command: str) -> str:
     stripped = (command or "").strip()
     if not stripped:
@@ -279,6 +294,8 @@ class RepoEvalAgent:
         self.cfg = cfg
         self.workspace_root = Path(cfg.workspace_root).resolve()
         self.workspace_root.mkdir(parents=True, exist_ok=True)
+        self._setup_cache: dict[tuple[str, str, str], CommandExecutionResult] = {}
+        self._wsl_home_cache: dict[str, str] = {}
         self.enable_local_commands = (
             cfg.enable_local_commands
             if enable_local_commands_override is None
@@ -297,6 +314,7 @@ class RepoEvalAgent:
     def evaluate_repo(self, repo: RepoEvalPolicy) -> RepoEvaluationResult:
         errors: list[str] = []
         repo_path = self._resolve_repo(repo, errors)
+        execution_repo_path = self._resolve_execution_repo(repo, repo_path, errors)
         static = scan_repository(
             repo_path,
             documentation_refs=self._documentation_refs(repo_path, repo.local),
@@ -305,14 +323,29 @@ class RepoEvalAgent:
         if self.cfg.enable_command_inference:
             infer_local_commands(repo_path, static)
 
+        runner = (repo.local.runner or "host").strip().lower()
+        setup_command = repo.local.setup_command or _skill_local_setup_command(
+            repo.name, runner
+        )
+        command_prefix = repo.local.command_prefix or _skill_command_prefix(
+            repo.name, runner
+        )
+
         build_command = repo.local.incremental_build_command or repo.local.build_command
         if not build_command:
-            build_command = static.inferred_build_command
+            build_command = (
+                _skill_local_command(repo.name, "build_command", runner)
+                or static.inferred_build_command
+            )
         unit_test_command = (
-            repo.local.unit_test_command or static.inferred_unit_test_command
+            repo.local.unit_test_command
+            or _skill_local_command(repo.name, "unit_test_command", runner)
+            or static.inferred_unit_test_command
         )
         code_check_command = (
-            repo.local.code_check_command or static.inferred_code_check_command
+            repo.local.code_check_command
+            or _skill_local_command(repo.name, "code_check_command", runner)
+            or static.inferred_code_check_command
         )
 
         incremental_build = self._run_local_command(
@@ -321,6 +354,9 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=True,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
+            execution_repo_path=execution_repo_path,
         )
         unit_test = self._run_local_command(
             repo_path,
@@ -328,6 +364,9 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=False,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
+            execution_repo_path=execution_repo_path,
         )
         code_check = self._run_local_command(
             repo_path,
@@ -335,6 +374,9 @@ class RepoEvalAgent:
             repo.local,
             timeout_sec=repo.local.timeout_sec or self.cfg.default_timeout_sec,
             run_twice=False,
+            setup_command=setup_command,
+            command_prefix=command_prefix,
+            execution_repo_path=execution_repo_path,
         )
 
         pr_metrics = self._collect_pr_metrics(
@@ -408,6 +450,149 @@ class RepoEvalAgent:
             errors.append(f"failed to clone/fetch repo: {exc}")
         return local_dir
 
+    def _wsl_subprocess_args(
+        self,
+        shell_script: str,
+        local_cfg: LocalEvalConfig,
+        cwd: Path,
+    ) -> dict[str, Any]:
+        escaped_script = _escape_wsl_bash_script(shell_script)
+        args = ["wsl.exe"]
+        if local_cfg.wsl_distro:
+            args.extend(["-d", local_cfg.wsl_distro])
+        args.extend(["--", "bash", "-lc", escaped_script])
+        return {
+            "args": args,
+            "cwd": str(cwd),
+            "shell": False,
+        }
+
+    def _wsl_home_dir(self, local_cfg: LocalEvalConfig, cwd: Path) -> str:
+        cache_key = local_cfg.wsl_distro or "__default__"
+        cached = self._wsl_home_cache.get(cache_key)
+        if cached:
+            return cached
+        proc_args = self._wsl_subprocess_args('printf "%s" "$HOME"', local_cfg, cwd)
+        proc = subprocess.run(
+            proc_args["args"],
+            cwd=proc_args["cwd"],
+            shell=proc_args["shell"],
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+        home_dir = (proc.stdout or "").strip()
+        if proc.returncode != 0 or not home_dir:
+            raise RuntimeError(
+                _excerpt(proc.stderr or proc.stdout or "wsl HOME lookup failed")
+            )
+        self._wsl_home_cache[cache_key] = home_dir
+        return home_dir
+
+    def _resolve_execution_repo(
+        self,
+        repo: RepoEvalPolicy,
+        repo_path: Path,
+        errors: list[str],
+    ) -> str:
+        runner = (repo.local.runner or "host").strip().lower()
+        if runner != "wsl":
+            return str(repo_path)
+        if not repo.local.prefer_wsl_native_workspace:
+            return _windows_to_wsl_path(repo_path)
+
+        clone_url = repo.clone_url or _git_remote_origin(repo_path)
+        if not clone_url:
+            errors.append(
+                "runner is wsl but no clone url/remote found; fallback to mounted Windows path"
+            )
+            return _windows_to_wsl_path(repo_path)
+
+        workspace_root_raw = (
+            repo.local.wsl_workspace_root.strip() or "~/.cache/repo-dev-eval/repos"
+        )
+        try:
+            wsl_home_dir = self._wsl_home_dir(repo.local, repo_path)
+        except Exception as exc:
+            errors.append(
+                "failed to resolve WSL home directory, fallback to mounted Windows path: "
+                f"{exc}"
+            )
+            return _windows_to_wsl_path(repo_path)
+        if workspace_root_raw == "~":
+            workspace_root = wsl_home_dir
+        elif workspace_root_raw.startswith("~/"):
+            workspace_root = f"{wsl_home_dir}/{workspace_root_raw[2:]}"
+        else:
+            workspace_root = workspace_root_raw
+        repo_slug = _repo_slug(repo.name or repo_path.name)
+        branch_name = ""
+        default_ref = _git_remote_default_ref(repo_path)
+        if default_ref.startswith("origin/"):
+            branch_name = default_ref.split("/", 1)[1]
+        source_repo_path = _windows_to_wsl_path(repo_path)
+        sync_script_parts = [
+            "set -euo pipefail",
+            f"workspace_root={shlex.quote(workspace_root)}",
+            f'repo_dir="$workspace_root/{repo_slug}"',
+            f"source_repo={shlex.quote(source_repo_path)}",
+            f"clone_url={shlex.quote(clone_url)}",
+            'mkdir -p "$workspace_root"',
+            'if [ -d "$source_repo/.git" ]; then '
+            'source_head=$(git -C "$source_repo" rev-parse HEAD); '
+            'if [ -d "$repo_dir/.git" ]; then '
+            'git -C "$repo_dir" remote set-url origin "$clone_url" >/dev/null 2>&1 || true; '
+            'git -C "$repo_dir" fetch --quiet "$source_repo" "$source_head" --no-tags >/dev/null 2>&1 || true; '
+            "else "
+            'git clone --quiet --no-hardlinks "$source_repo" "$repo_dir" >/dev/null 2>&1; '
+            'git -C "$repo_dir" remote set-url origin "$clone_url" >/dev/null 2>&1 || true; '
+            "fi; "
+            'git -C "$repo_dir" checkout --quiet -f "$source_head" >/dev/null 2>&1; '
+            "else "
+            'if [ -d "$repo_dir/.git" ]; then git -C "$repo_dir" remote set-url origin "$clone_url" >/dev/null 2>&1 || true; git -C "$repo_dir" fetch --quiet origin --prune --tags >/dev/null 2>&1; else git clone --quiet "$clone_url" "$repo_dir" >/dev/null 2>&1; fi; '
+            "fi",
+        ]
+        if branch_name:
+            sync_script_parts.extend(
+                [
+                    f"branch_name={shlex.quote(branch_name)}",
+                    'if git -C "$repo_dir" rev-parse --verify "origin/$branch_name" >/dev/null 2>&1; then git -C "$repo_dir" checkout --quiet -B "$branch_name" "origin/$branch_name" >/dev/null 2>&1; elif git -C "$repo_dir" rev-parse --verify "$branch_name" >/dev/null 2>&1; then git -C "$repo_dir" checkout --quiet "$branch_name" >/dev/null 2>&1; fi',
+                ]
+            )
+        sync_script_parts.append('printf "%s" "$repo_dir"')
+        proc_args = self._wsl_subprocess_args(
+            "; ".join(sync_script_parts), repo.local, repo_path
+        )
+        try:
+            proc = subprocess.run(
+                proc_args["args"],
+                cwd=proc_args["cwd"],
+                shell=proc_args["shell"],
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                check=False,
+                timeout=min(max(repo.local.timeout_sec, 300), 1800),
+            )
+        except Exception as exc:
+            errors.append(
+                f"failed to prepare native wsl workspace, fallback to mounted Windows path: {exc}"
+            )
+            return _windows_to_wsl_path(repo_path)
+        if proc.returncode != 0:
+            errors.append(
+                "failed to prepare native wsl workspace, fallback to mounted Windows path: "
+                f"{_excerpt(proc.stderr or proc.stdout)}"
+            )
+            return _windows_to_wsl_path(repo_path)
+
+        resolved = (proc.stdout or "").strip()
+        return resolved or _windows_to_wsl_path(repo_path)
+
     def _run_local_command(
         self,
         repo_path: Path,
@@ -415,6 +600,9 @@ class RepoEvalAgent:
         local_cfg: LocalEvalConfig,
         timeout_sec: int,
         run_twice: bool,
+        setup_command: str = "",
+        command_prefix: str = "",
+        execution_repo_path: str = "",
     ) -> CommandExecutionResult:
         if not command:
             return CommandExecutionResult(status="not_configured")
@@ -424,11 +612,11 @@ class RepoEvalAgent:
         runner = (local_cfg.runner or "host").strip().lower()
         timeout_duration_sec: float | None = None
 
-        def build_subprocess_args() -> dict[str, Any]:
+        def build_subprocess_args(shell_command: str) -> dict[str, Any]:
             if runner == "wsl":
-                wsl_path = _windows_to_wsl_path(repo_path)
+                wsl_path = execution_repo_path or _windows_to_wsl_path(repo_path)
                 bash_script = (
-                    f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {command}"
+                    f"set -euo pipefail; cd {shlex.quote(wsl_path)}; {shell_command}"
                 )
                 args = ["wsl.exe"]
                 if local_cfg.wsl_distro:
@@ -439,17 +627,19 @@ class RepoEvalAgent:
                     "cwd": str(repo_path),
                     "shell": False,
                 }
-            normalized_command = _normalize_host_command(command)
+            normalized_command = _normalize_host_command(shell_command)
             return {
                 "args": normalized_command,
                 "cwd": str(repo_path),
                 "shell": True,
             }
 
-        def run_once() -> tuple[float, subprocess.CompletedProcess[str]]:
+        def run_once(
+            shell_command: str,
+        ) -> tuple[float, subprocess.CompletedProcess[str]]:
             nonlocal timeout_duration_sec
             start = time.perf_counter()
-            proc_args = build_subprocess_args()
+            proc_args = build_subprocess_args(shell_command)
             try:
                 proc = subprocess.run(
                     proc_args["args"],
@@ -468,30 +658,129 @@ class RepoEvalAgent:
             duration = time.perf_counter() - start
             return duration, proc
 
+        setup_result = CommandExecutionResult()
+        setup_from_cache = False
+        if setup_command:
+            cache_key = (execution_repo_path or str(repo_path), runner, setup_command)
+            cached = self._setup_cache.get(cache_key)
+            if cached is None:
+                try:
+                    setup_duration, setup_proc = run_once(setup_command)
+                except subprocess.TimeoutExpired:
+                    setup_result = CommandExecutionResult(
+                        status="timeout",
+                        command=command,
+                        setup_command=setup_command,
+                        setup_status="timeout",
+                        setup_duration_sec=timeout_duration_sec or float(timeout_sec),
+                        setup_stderr_excerpt=f"timeout after {timeout_sec}s",
+                    )
+                    self._setup_cache[cache_key] = setup_result
+                    return setup_result
+                except Exception as exc:
+                    setup_result = CommandExecutionResult(
+                        status="error",
+                        command=command,
+                        setup_command=setup_command,
+                        setup_status="error",
+                        setup_stderr_excerpt=str(exc),
+                    )
+                    self._setup_cache[cache_key] = setup_result
+                    return setup_result
+                setup_result = CommandExecutionResult(
+                    status="ok" if setup_proc.returncode == 0 else "failed",
+                    command=command,
+                    setup_command=setup_command,
+                    setup_status="ok" if setup_proc.returncode == 0 else "failed",
+                    setup_duration_sec=setup_duration,
+                    returncode=setup_proc.returncode if setup_proc.returncode else None,
+                    setup_stdout_excerpt=_excerpt(setup_proc.stdout),
+                    setup_stderr_excerpt=_excerpt(setup_proc.stderr),
+                )
+                self._setup_cache[cache_key] = setup_result
+            else:
+                setup_result = cached
+                setup_from_cache = True
+
+            if setup_result.setup_status not in {"", "ok"}:
+                return CommandExecutionResult(
+                    status=setup_result.setup_status or setup_result.status,
+                    command=command,
+                    setup_command=setup_command,
+                    setup_status=setup_result.setup_status,
+                    setup_duration_sec=setup_result.setup_duration_sec,
+                    setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stdout_excerpt=setup_result.setup_stdout_excerpt,
+                )
+
+            if command.strip() and command.strip() in setup_command:
+                return CommandExecutionResult(
+                    status="ok",
+                    command=command,
+                    duration_sec=setup_result.setup_duration_sec,
+                    returncode=0,
+                    setup_command=setup_command,
+                    setup_status=setup_result.setup_status,
+                    setup_duration_sec=setup_result.setup_duration_sec,
+                    setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
+                    stdout_excerpt=setup_result.setup_stdout_excerpt,
+                    stderr_excerpt=setup_result.setup_stderr_excerpt,
+                )
+
+        effective_command = command
+        if command_prefix:
+            effective_command = f"{command_prefix}; {command}"
         try:
             if run_twice:
-                _, _ = run_once()
-            duration, proc = run_once()
+                _, _ = run_once(effective_command)
+            duration, proc = run_once(effective_command)
         except subprocess.TimeoutExpired:
             return CommandExecutionResult(
                 status="timeout",
                 command=command,
                 duration_sec=timeout_duration_sec or float(timeout_sec),
                 returncode=None,
+                setup_command=setup_command,
+                setup_status=setup_result.setup_status,
+                setup_duration_sec=setup_result.setup_duration_sec,
+                setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
                 stderr_excerpt=f"timeout after {timeout_sec}s",
             )
         except Exception as exc:
             return CommandExecutionResult(
                 status="error",
                 command=command,
+                setup_command=setup_command,
+                setup_status=setup_result.setup_status,
+                setup_duration_sec=setup_result.setup_duration_sec,
+                setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+                setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
                 stderr_excerpt=str(exc),
             )
+
+        total_duration = duration
+        if (
+            setup_command
+            and setup_result.setup_status == "ok"
+            and setup_result.setup_duration_sec
+            and not setup_from_cache
+        ):
+            total_duration += setup_result.setup_duration_sec
 
         return CommandExecutionResult(
             status="ok" if proc.returncode == 0 else "failed",
             command=command,
-            duration_sec=duration,
+            duration_sec=total_duration,
             returncode=proc.returncode,
+            setup_command=setup_command,
+            setup_status=("reused" if setup_from_cache else setup_result.setup_status),
+            setup_duration_sec=setup_result.setup_duration_sec,
+            setup_stdout_excerpt=setup_result.setup_stdout_excerpt,
+            setup_stderr_excerpt=setup_result.setup_stderr_excerpt,
             stdout_excerpt=_excerpt(proc.stdout),
             stderr_excerpt=_excerpt(proc.stderr),
         )

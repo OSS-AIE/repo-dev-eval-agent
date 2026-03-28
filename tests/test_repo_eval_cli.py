@@ -14,6 +14,7 @@ def test_policy_from_repo_input_supports_github_url():
         "https://github.com/vllm-project/vllm",
         local_runner="wsl",
         local_wsl_distro="Ubuntu",
+        local_wsl_workspace_root="~/.cache/repo-dev-eval/repos",
         remote_cfg=RemoteEvalConfig(pr_window_days=14),
         ai_cfg=AIEvalConfig(enabled=True, provider="codex"),
     )
@@ -22,6 +23,7 @@ def test_policy_from_repo_input_supports_github_url():
     assert policy.clone_url == "https://github.com/vllm-project/vllm.git"
     assert policy.local.runner == "wsl"
     assert policy.local.wsl_distro == "Ubuntu"
+    assert policy.local.wsl_workspace_root == "~/.cache/repo-dev-eval/repos"
     assert policy.github.pr_window_days == 14
     assert policy.ai.provider == "codex"
 
@@ -39,6 +41,7 @@ def test_policy_from_repo_input_supports_local_path_with_remote(tmp_path: Path):
         str(tmp_path),
         local_runner="host",
         local_wsl_distro="",
+        local_wsl_workspace_root="",
         remote_cfg=RemoteEvalConfig(),
         ai_cfg=AIEvalConfig(),
     )
@@ -61,6 +64,7 @@ def test_policy_from_repo_input_supports_local_path_with_ssh_remote(tmp_path: Pa
         str(tmp_path),
         local_runner="host",
         local_wsl_distro="",
+        local_wsl_workspace_root="",
         remote_cfg=RemoteEvalConfig(),
         ai_cfg=AIEvalConfig(),
     )
@@ -92,6 +96,7 @@ def test_policy_from_repo_input_prefers_remote_matching_local_repo_name(
         str(repo_dir),
         local_runner="host",
         local_wsl_distro="",
+        local_wsl_workspace_root="",
         remote_cfg=RemoteEvalConfig(),
         ai_cfg=AIEvalConfig(),
     )

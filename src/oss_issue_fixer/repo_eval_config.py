@@ -36,6 +36,8 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                 local_path=item.get("local_path", ""),
                 clone_url=item.get("clone_url", ""),
                 local=LocalEvalConfig(
+                    setup_command=local_raw.get("setup_command", ""),
+                    command_prefix=local_raw.get("command_prefix", ""),
                     build_command=local_raw.get("build_command", ""),
                     incremental_build_command=local_raw.get(
                         "incremental_build_command", ""
@@ -44,6 +46,10 @@ def load_repo_eval_config(path: str) -> RepoEvalAppConfig:
                     code_check_command=local_raw.get("code_check_command", ""),
                     runner=local_raw.get("runner", "host"),
                     wsl_distro=local_raw.get("wsl_distro", ""),
+                    wsl_workspace_root=local_raw.get("wsl_workspace_root", ""),
+                    prefer_wsl_native_workspace=bool(
+                        local_raw.get("prefer_wsl_native_workspace", True)
+                    ),
                     refresh_local_repo=bool(local_raw.get("refresh_local_repo", True)),
                     documentation_refs=list(
                         local_raw.get("documentation_refs", []) or []
